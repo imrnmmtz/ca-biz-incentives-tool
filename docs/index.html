@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>California Business Incentives Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#11252F;
+    --ink-soft:#1C3B49;
+    --paper:#E7ECEE;
+    --card:#FFFFFF;
+    --rule:#C9D3D8;
+    --rule-soft:#E2E8EA;
+    --muted:#55686F;
+    --brass:#8F6212;
+    --brass-lift:#F3EADA;
+
+    --c-biz:#1C5A6B;
+    --c-emp:#6E3A57;
+    --c-equ:#8F6212;
+    --c-fin:#2E6147;
+    --c-pow:#3C5A8F;
+
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.5;
+    font-variant-numeric:tabular-nums;
+  }
+  a{color:var(--ink)}
+  button{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:2px}
+
+  /* ---------- masthead ---------- */
+  .masthead{background:var(--ink);color:#EAF0F2}
+  .masthead-inner{max-width:1280px;margin:0 auto;padding:30px 24px 26px}
+  .masthead h1{
+    font-family:var(--serif);font-weight:500;letter-spacing:-.012em;
+    font-size:clamp(1.6rem,3.4vw,2.7rem);line-height:1.1;margin:0 0 12px;
+    text-wrap:balance;
+  }
+  .mast-lede{margin:0;color:#A8BEC6;font-size:.94rem;line-height:1.55}
+  .mast-meta{margin:0;color:#7E99A3;font-size:.8rem}
+
+  .mast-foot{
+    display:flex;flex-wrap:wrap;gap:16px 34px;
+    align-items:flex-end;justify-content:space-between;margin-top:20px;
+  }
+  .basket-block{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding-bottom:2px}
+  .basket-count{font-family:var(--serif);font-size:1.02rem;color:#EAF0F2}
+  .basket-count b{font-weight:600}
+  .basket-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  .btn{
+    border:1px solid transparent;border-radius:3px;padding:9px 15px;
+    text-decoration:none;display:inline-block;line-height:1.25;
+    font-size:.85rem;font-weight:500;cursor:pointer;background:none;
+    transition:background-color .12s ease,border-color .12s ease,color .12s ease;
+  }
+  .btn[disabled]{cursor:not-allowed;opacity:.42}
+  .btn-solid{background:#EAF0F2;color:var(--ink);border-color:#EAF0F2}
+  .btn-solid:hover:not([disabled]){background:#fff}
+  .btn-ghost-light{border-color:#3E5E6C;color:#C3D5DB}
+  .btn-ghost-light:hover:not([disabled]){border-color:#7E99A3;color:#EAF0F2}
+
+  /* ---------- controls ---------- */
+  .controls{
+    position:sticky;top:0;z-index:40;
+    background:rgba(231,236,238,.94);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--rule);
+  }
+  .controls-inner{max-width:1280px;margin:0 auto;padding:14px 24px}
+  .control-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:.71rem;color:var(--muted);letter-spacing:.005em}
+  .field select,.search input{
+    font-family:inherit;font-size:.86rem;color:var(--ink);height:37px;
+    background:var(--card);border:1px solid var(--rule);border-radius:3px;
+    padding:8px 10px;min-width:170px;
+  }
+  .field select{
+    appearance:none;padding-right:28px;min-width:158px;max-width:230px;
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2355686F' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;
+  }
+  .search{flex:1 1 260px;min-width:190px;max-width:400px}
+  .search input{width:100%}
+  .search input::placeholder{color:#8A9CA3}
+
+  .status-row{
+    display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;
+    margin-top:11px;font-size:.83rem;color:var(--muted);
+  }
+  .status-row .count{color:var(--ink);font-weight:500}
+  .linkish{
+    background:none;border:0;padding:0;cursor:pointer;
+    color:var(--brass);font-size:.83rem;text-decoration:underline;text-underline-offset:2px;
+  }
+  .linkish[disabled]{color:var(--muted);text-decoration:none;cursor:default}
+
+  /* ---------- results ---------- */
+  main{max-width:1280px;margin:0 auto;padding:26px 24px 72px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+
+  .card{
+    position:relative;background:var(--card);
+    border:1px solid var(--rule);border-radius:3px;
+    padding:18px 18px 14px 22px;
+    display:flex;flex-direction:column;
+    cursor:pointer;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:-1px;bottom:-1px;width:5px;
+    background:var(--spine);border-radius:3px 0 0 3px;
+  }
+  .card:hover{border-color:#A9B8BF}
+  .card.picked{border-color:var(--brass);background:#FDFBF7}
+
+  .card-cat{font-size:.71rem;color:var(--spine);font-weight:500;margin-bottom:6px}
+  .card h2{
+    font-family:var(--serif);font-weight:600;letter-spacing:-.005em;
+    font-size:1.09rem;line-height:1.24;margin:0 0 8px;
+  }
+  .card-summary{margin:0 0 14px;font-size:.855rem;line-height:1.55;color:#33474F}
+
+  .specs{border-top:1px solid var(--rule-soft);margin-bottom:14px}
+  .spec{display:grid;grid-template-columns:8.6em 1fr;gap:10px;padding:6px 0;border-bottom:1px solid var(--rule-soft)}
+  .spec dt{font-size:.735rem;color:var(--muted);line-height:1.4}
+  .spec dd{margin:0;font-size:.79rem;line-height:1.42}
+
+  .card-actions{margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn-line{border-color:var(--rule);color:var(--ink);background:var(--card)}
+  .btn-line:hover{border-color:var(--ink);background:#F6F9FA}
+  .btn-pick{border-color:var(--rule);background:var(--card)}
+  .btn-pick:hover{border-color:var(--brass);color:var(--brass)}
+  .btn-pick.on{background:var(--brass-lift);border-color:var(--brass);color:var(--brass)}
+  .expand-hint{margin-left:auto;font-size:.74rem;color:#8A9CA3}
+
+  .empty{
+    grid-column:1/-1;background:var(--card);border:1px solid var(--rule);border-radius:3px;
+    padding:38px 26px;text-align:center;
+  }
+  .empty p{margin:0 0 14px;color:var(--muted);font-size:.9rem}
+  .empty strong{font-family:var(--serif);font-weight:600;font-size:1.05rem;color:var(--ink);display:block;margin-bottom:8px}
+
+  /* ---------- overlays ---------- */
+  .scrim{
+    position:fixed;inset:0;z-index:60;background:rgba(11,28,36,.5);
+    display:none;padding:22px;overflow-y:auto;
+  }
+  .scrim.open{display:flex;align-items:flex-start;justify-content:center}
+
+  .sheet{
+    background:var(--card);border-radius:4px;width:100%;
+    box-shadow:0 22px 60px rgba(9,24,31,.34);
+    margin:auto;
+  }
+  .sheet-detail{max-width:720px}
+  .sheet-list{max-width:620px}
+
+  .sheet-head{
+    position:relative;padding:24px 56px 20px 26px;
+    border-bottom:1px solid var(--rule);
+  }
+  .sheet-head .card-cat{margin-bottom:7px}
+  .sheet-head h2{
+    font-family:var(--serif);font-weight:600;letter-spacing:-.008em;
+    font-size:1.5rem;line-height:1.16;margin:0;
+  }
+  .closer{
+    position:absolute;top:18px;right:16px;width:32px;height:32px;
+    border:1px solid var(--rule);border-radius:3px;background:var(--card);
+    cursor:pointer;line-height:1;font-size:1.05rem;color:var(--muted);
+  }
+  .closer:hover{border-color:var(--ink);color:var(--ink)}
+
+  .sheet-body{padding:22px 26px 24px}
+  .sheet-body h3{
+    font-size:.78rem;font-weight:600;color:var(--muted);
+    margin:0 0 9px;letter-spacing:.005em;
+  }
+  .sheet-body h3+p{margin-top:0}
+  .sheet-prose{font-size:.925rem;line-height:1.66;margin:0 0 22px;max-width:66ch;color:#22383F}
+
+  .sheet-specs{border-top:1px solid var(--rule-soft);margin:0 0 22px}
+  .sheet-specs .spec{grid-template-columns:11em 1fr}
+  .sheet-specs dd{font-size:.855rem}
+  .sheet-specs dd a{color:var(--brass);text-decoration:underline;text-underline-offset:2px}
+
+  .sheet-foot{
+    padding:16px 26px 20px;border-top:1px solid var(--rule);
+    display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+  }
+  .btn-brass{background:var(--brass);border-color:var(--brass);color:#fff}
+  .btn-brass:hover:not([disabled]){background:#7A5310;border-color:#7A5310}
+
+  /* shortlist */
+  .picked-list{list-style:none;margin:0;padding:0}
+  .picked-item{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:13px 0;border-bottom:1px solid var(--rule-soft);
+  }
+  .picked-item:last-child{border-bottom:0}
+  .picked-main{flex:1;min-width:0}
+  .picked-main .nm{font-family:var(--serif);font-weight:600;font-size:1rem;line-height:1.25;display:block}
+  .picked-main .sub{font-size:.755rem;color:var(--muted);margin-top:3px;display:block}
+  .drop{
+    border:1px solid var(--rule);background:var(--card);border-radius:3px;
+    padding:4px 9px;font-size:.74rem;color:var(--muted);cursor:pointer;flex-shrink:0;
+  }
+  .drop:hover{border-color:#A8443A;color:#A8443A}
+
+  .note{font-size:.79rem;color:var(--muted);line-height:1.55;margin:0}
+
+  footer{
+    max-width:1280px;margin:0 auto;padding:0 24px 52px;
+    font-size:.775rem;color:var(--muted);line-height:1.6;
+  }
+  footer .foot-inner{border-top:1px solid var(--rule);padding-top:18px}
+  footer a{color:var(--brass)}
+
+  @media (max-width:640px){
+    .masthead-inner{padding:24px 18px 22px}
+    .controls-inner{padding:12px 18px}
+    main{padding:20px 18px 60px}
+    footer{padding:0 18px 44px}
+    .grid{grid-template-columns:1fr}
+    /* free the viewport for results; filters live at the top of the page */
+    .controls{position:static;backdrop-filter:none;background:var(--paper)}
+    .control-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .search{grid-column:1/-1;max-width:none}
+    .field select,.search input{min-width:0;max-width:none;width:100%}
+    .field:last-of-type{grid-column:1/-1}
+    .sheet-head{padding:20px 50px 18px 20px}
+    .sheet-body,.sheet-foot{padding-left:20px;padding-right:20px}
+    .spec{grid-template-columns:1fr;gap:1px}
+    .sheet-specs .spec{grid-template-columns:1fr}
+    .scrim{padding:0}
+    .sheet{border-radius:0;min-height:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <h1>California Business Incentives Tool</h1>
+    <p class="mast-lede">Every funding program in the state's Business Investment Guide, in one filterable place. Browse by category, agency, or incentive type, then build a shortlist you can hand to a client or a board.</p>
+    <div class="mast-foot">
+      <p class="mast-meta" id="mastMeta"></p>
+      <div class="basket-block">
+        <span class="basket-count" id="basketCount">Your list is empty</span>
+        <div class="basket-actions">
+          <button class="btn btn-ghost-light" id="viewListBtn" disabled>Review list</button>
+          <button class="btn btn-solid" id="downloadBtn" disabled>Download my list</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <div class="control-row">
+      <div class="field search">
+        <label for="q">Search</label>
+        <input id="q" type="search" placeholder="Program name, agency, or keyword" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="fCat">Category</label>
+        <select id="fCat"></select>
+      </div>
+      <div class="field">
+        <label for="fBody">Administering body</label>
+        <select id="fBody"></select>
+      </div>
+      <div class="field">
+        <label for="fType">Type</label>
+        <select id="fType"></select>
+      </div>
+    </div>
+    <div class="status-row">
+      <span class="count" id="resultCount"></span>
+      <button class="linkish" id="clearBtn" disabled>Clear filters</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    Program data and every "Learn more" link are taken directly from the California Business Investment Guide (GO-Biz, September 2026), including the guide's own embedded hyperlinks. Amounts, deadlines, and eligibility change frequently — confirm details with the administering agency before relying on them. The written summaries are added here to explain each program in plain terms and are not official agency language.
+    <br><br>
+    <a href="https://business.ca.gov/wp-content/uploads/CA-BIG-2026-SEPTEMBER-2026pdf.pdf" target="_blank" rel="noopener">Open the source guide (PDF)</a>
+  </div>
+</footer>
+
+<!-- detail -->
+<div class="scrim" id="detailScrim" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="sheet sheet-detail">
+    <div class="sheet-head">
+      <div class="card-cat" id="detailCat"></div>
+      <h2 id="detailTitle"></h2>
+      <button class="closer" id="detailClose" aria-label="Close">&#215;</button>
+    </div>
+    <div class="sheet-body">
+      <h3>What it is</h3>
+      <p class="sheet-prose" id="detailProse"></p>
+      <h3>Program details</h3>
+      <dl class="sheet-specs" id="detailSpecs"></dl>
+    </div>
+    <div class="sheet-foot">
+      <a class="btn btn-line" id="detailLink" target="_blank" rel="noopener">Learn more</a>
+      <a class="btn btn-brass" id="detailInterest"></a>
+      <button class="btn btn-pick" id="detailPick"></button>
+    </div>
+  </div>
+</div>
+
+<!-- shortlist -->
+<div class="scrim" id="listScrim" role="dialog" aria-modal="true" aria-labelledby="listTitle">
+  <div class="sheet sheet-list">
+    <div class="sheet-head">
+      <h2 id="listTitle">Your list</h2>
+      <button class="closer" id="listClose" aria-label="Close">&#215;</button>
+    </div>
+    <div class="sheet-body">
+      <ul class="picked-list" id="pickedList"></ul>
+      <p class="note" id="listNote"></p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-brass" id="listDownload">Download my list</button>
+      <button class="btn btn-line" id="listClear">Remove all</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==== DATA ==== */
+const INCENTIVES = [
+/* ---------- BUSINESS DEVELOPMENT & BUSINESS SUPPORT ---------- */
+{
+  name: "California Competes Tax Credit",
+  category: "Business Development & Business Support",
+  body: "State: GO-Biz",
+  type: "State Income Tax Credit",
+  eligibility: "Qualified Businesses",
+  total: "$819,843,124",
+  max: "No more than 20% may go to one applicant per fiscal year",
+  timing: "January 4 – January 25, 2027 ($250M) and March 1 – March 15, 2027 ($219.8M + any remaining amounts)",
+  email: "calcompetes@gobiz.ca.gov",
+  url: "https://business.ca.gov/california-competes-tax-credit/",
+  summary: "A negotiated income tax credit for companies that commit to adding jobs and making capital investments in California. GO-Biz negotiates a multi-year agreement with each awardee, and credits are earned only as hiring and investment milestones are met.",
+  detail: "California Competes is the state's flagship discretionary attraction-and-retention incentive. Applicants compete statewide in defined application windows, and GO-Biz evaluates each proposal on the number of jobs created, the amount of investment, wage levels, the strategic importance of the project, and whether the incentive is genuinely influencing a location decision. Successful applicants sign a five-year agreement with year-by-year employment and investment milestones; credits are claimed against California income tax as milestones are achieved, and the state recaptures credits if targets are missed. Each fiscal year a share of the credit pool is reserved for small businesses, and no single applicant may take more than 20 percent of the annual allocation. There is no fee to apply, and applications are submitted online."
+},
+{
+  name: "California Clean Hydrogen Program",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "State Grant",
+  eligibility: "Eligible projects for the demonstration or scale-up of the production, processing, delivery, storage, or end use of clean hydrogen",
+  total: "TBD",
+  max: "TBD",
+  timing: "Ongoing",
+  email: "erdd@energy.ca.gov",
+  url: "https://www.energy.ca.gov/programs-and-topics/programs/clean-hydrogen-program#:~:text=The%20Clean%20Hydrogen%20Program%20was,derived%20from%20water%20using%20eligible",
+  summary: "Energy Commission grants that help move clean hydrogen projects from demonstration toward commercial scale. Funding can cover production, processing, delivery, storage, or end-use applications anywhere in the hydrogen value chain.",
+  detail: "The Clean Hydrogen Program provides financial incentives to in-state projects that demonstrate or scale up clean hydrogen, with the goal of cutting emissions in sectors that are hard to electrify directly — heavy industry, long-haul freight, and dispatchable power among them. Awards are made through competitive solicitations released by the Energy Research and Development Division, so amounts, match requirements, and eligibility narrow considerably depending on which solicitation is open. Projects are generally expected to show a credible path to commercial operation rather than early-stage research. Because funding levels are tied to budget appropriations and federal co-funding, the available totals shift between cycles; check the CEC solicitations page for what is currently open."
+},
+{
+  name: "Industrial Decarbonization and Improvement of Grid Operations (INDIGO)",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "State Grant",
+  eligibility: "Industrial Facility Projects",
+  total: "N/A",
+  max: "TBD",
+  timing: "N/A",
+  email: "erdd@energy.ca.gov",
+  url: "https://www.energy.ca.gov/programs-and-topics/programs/industrial-decarbonization-and-improvement-grid-operations-indigo",
+  summary: "Grants for industrial facilities that cut emissions while also delivering a benefit to the electric grid. INDIGO targets projects that pair decarbonization with load flexibility, efficiency, or on-site generation.",
+  detail: "INDIGO funds projects at industrial sites that reduce greenhouse gas emissions and local air pollution while improving how the facility interacts with the grid — for example, by shifting load off peak, adding storage, electrifying process heat, or installing demand-responsive equipment. The program is designed for manufacturers and process-industry operators who face high thermal or electrical loads and who have been hard to reach through conventional efficiency programs. Awards are made through competitive solicitations from the Energy Research and Development Division, with project scope, cost share, and maximum award defined per solicitation. Projects sited in or benefiting disadvantaged and low-income communities are typically prioritized."
+},
+{
+  name: "Carbon Removal Innovation Support Program (CRISP)",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "State Grant",
+  eligibility: "Direct Air Capture Projects",
+  total: "TBD",
+  max: "TBD",
+  timing: "TBD",
+  email: "erdd@energy.ca.gov",
+  url: "https://www.energy.ca.gov/programs-and-topics/programs/carbon-removal-innovation-support-program-crisp",
+  summary: "Grant funding to advance direct air capture technology in California. CRISP is aimed at moving carbon removal from the lab toward demonstration at meaningful scale.",
+  detail: "CRISP provides financial incentives to develop and demonstrate technologies that pull carbon dioxide directly from ambient air. The program supports the engineering, siting, and demonstration work that sits between a proven laboratory process and a commercially financeable facility, including work on energy sourcing, durable storage or utilization pathways, and measurement and verification. It is a research-and-development program, so awards flow through competitive Energy Commission solicitations with defined technical scopes rather than through an open rolling application. Companies considering a California direct air capture project should watch the CEC solicitations page and contact the Energy Research and Development Division early, since the program is still ramping and funding amounts remain to be set."
+},
+{
+  name: "California Electric Vehicle Infrastructure Project (CALeVIP) Fast Charge California Project Window 2",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "Rebate",
+  eligibility: "Incentives for purchasing and installing eligible direct current fast chargers; sites must be available to the public",
+  total: "$55,000,000",
+  max: "Up to $100,000 per charging port",
+  timing: "October 7, 2026 – January 14, 2027",
+  email: "calevip@energycenter.org",
+  url: "https://calevip.org/fccp2",
+  summary: "Rebates of up to $100,000 per port for installing publicly accessible DC fast chargers. This second application window opens in October 2026 with $55 million available.",
+  detail: "Fast Charge California is the current flagship project under CALeVIP, the Energy Commission's statewide EV charging rebate initiative. It reimburses a large share of the cost of buying and installing eligible direct current fast chargers — equipment, electrical work, trenching, and utility make-ready in many cases — at sites that stay open to the general public. Typical applicants are retail centers, fuel stations, hotels, restaurants, parking operators, fleets with public-facing capacity, and property owners along travel corridors. Applications are handled through the CALeVIP portal administered by the Center for Sustainable Energy; funding is reserved on a first-come basis within the window and prior windows have been heavily oversubscribed, so prepare site control, utility service information, and equipment selection before the window opens."
+},
+{
+  name: "California Electric Vehicle Infrastructure Project (CALeVIP) Fast Charge California Project Window 3",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "Rebate",
+  eligibility: "Incentives for purchasing and installing eligible direct current fast chargers. Sites must be available to the public",
+  total: "$55,000,000",
+  max: "Up to $55,000 per charging port",
+  timing: "February 24, 2027 – May 27, 2027",
+  email: "calevip@energycenter.org",
+  url: "https://calevip.org/fccp3",
+  summary: "A third Fast Charge California window with another $55 million, capped at $55,000 per port. The lower per-port cap spreads the same total across more charging locations.",
+  detail: "Window 3 runs the same program mechanics as Window 2 but halves the per-port maximum, which effectively pushes the money toward a larger number of smaller installations rather than a few large hubs. Eligible costs again cover qualifying DC fast charging equipment and the installation work needed to energize it, and sites must remain publicly accessible for the duration of the required operating period. Applicants that miss Window 2, or that were only partially funded, commonly re-apply here. Because the two windows draw on separate allocations, a site that was unsuccessful in the fall can be resubmitted in the spring; confirm current terms on the CALeVIP portal before building your budget, since per-port caps and eligible cost categories are set per window."
+},
+{
+  name: "California National Electric Vehicle Infrastructure Formula Programs",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "State Grant",
+  eligibility: "Varies by Solicitation",
+  total: "$383,000,000",
+  max: "Varies by Solicitation",
+  timing: "Ongoing",
+  email: "ftd@energy.ca.gov",
+  url: "https://www.energy.ca.gov/programs-and-topics/programs/federal-ev-infrastructure-programs",
+  summary: "California's share of federal NEVI formula funds, used to build fast charging along designated alternative fuel corridors. Roughly $383 million is being deployed through Energy Commission solicitations.",
+  detail: "The National Electric Vehicle Infrastructure formula program channels federal highway dollars to states to build out a national fast-charging network, and California administers its allocation through the Energy Commission in coordination with Caltrans. Funding concentrates on designated alternative fuel corridors, with federal minimum standards on the number of ports per site, power levels, spacing between sites, uptime, payment access, and network interoperability. Awards go out through periodic competitive solicitations rather than a standing application, and each solicitation defines its own eligibility, geographic priorities, and cost share. Site hosts, charging network operators, and developers typically apply as a team. Federal program terms have been subject to change, so confirm current status and open solicitations with the Fuels and Transportation Division before committing capital."
+},
+{
+  name: "California State Trade Expansion Program (STEP)",
+  category: "Business Development & Business Support",
+  body: "State: GO-Biz",
+  type: "State Export Assistance",
+  eligibility: "Qualified Export Businesses",
+  total: "N/A",
+  max: "Reimbursement for export promotion expenses up to $10,000",
+  timing: "Deadline: April 30, 2027",
+  email: "step@gobiz.ca.gov",
+  url: "https://export.business.ca.gov/grant-details/",
+  summary: "Reimburses California small businesses for the cost of breaking into export markets, up to $10,000. Eligible spending includes trade shows, foreign market entry support, translation, and export compliance advice.",
+  detail: "STEP is federally funded by the U.S. Small Business Administration and administered in California by GO-Biz. It reimburses eligible small businesses for specific export-development costs: booth space and travel for international trade shows and trade missions, design of international marketing materials, website localization and translation, export training, compliance testing for foreign markets, and fees for services that identify overseas buyers or distributors. Applicants must meet SBA small business size standards, be export-ready with a product or service of U.S. origin, and be in good standing in California. Reimbursement is retrospective, so approval must be obtained before the expense is incurred. Funds are limited and awarded until exhausted, which in practice means applying well ahead of the stated deadline."
+},
+{
+  name: "Capital Investment Incentive Program (CIIP)",
+  category: "Business Development & Business Support",
+  body: "Local Government",
+  type: "Property Tax Rebate",
+  eligibility: "Qualified Manufacturing Businesses",
+  total: "Based on assessment",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "calbis@gobiz.ca.gov",
+  url: "https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202320240AB2922",
+  summary: "Lets a city or county rebate property tax on the assessed value of a large manufacturing facility above $150 million. It is adopted locally, so terms depend entirely on the jurisdiction where you site the project.",
+  detail: "CIIP is state-enabling legislation rather than a state fund: it authorizes a participating city, county, or city and county to pay a capital investment incentive amount to a proponent of a qualified manufacturing facility, for up to fifteen years, equal to the property tax on assessed value above a statutory threshold. Qualifying facilities are large manufacturing projects, including semiconductor, recycling, and certain clean energy manufacturing uses. Because adoption is discretionary at the local level, the practical first step is confirming whether the jurisdiction you are considering has an ordinance in place or is willing to adopt one, and negotiating a community services fee and job commitments as part of the package. GO-Biz Business Investment Services can help identify participating jurisdictions and coordinate conversations with local economic development staff."
+},
+{
+  name: "Clean Transportation Program",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "Property Tax Rebate",
+  eligibility: "Varies by Funding",
+  total: "$100,000,000 annually",
+  max: "Varies by program",
+  timing: "Varies by fiscal year",
+  email: "ftd@energy.ca.gov",
+  url: "https://www.energy.ca.gov/programs-and-topics/programs/clean-transportation-program",
+  summary: "The Energy Commission's roughly $100 million per year umbrella program for alternative fuel and ZEV infrastructure. It funds EV charging, hydrogen refueling, manufacturing, and workforce development through a rotating set of solicitations.",
+  detail: "Formerly the Alternative and Renewable Fuel and Vehicle Technology Program, the Clean Transportation Program is the funding engine behind much of California's charging and hydrogen station network. Each year the Energy Commission adopts an investment plan that sets funding priorities across categories such as light-duty charging, medium- and heavy-duty infrastructure, hydrogen refueling, zero-emission vehicle manufacturing, emerging fuels, and workforce training. Money then flows out through individual grant solicitations and block grants, each with its own eligibility, match, and award ceiling. Businesses generally engage with the program through whichever solicitation matches their project type rather than through a single application. Note that the guide lists this row's type as a property tax rebate; the program is in practice a grant and incentive program, so read the specific solicitation for the actual funding mechanism."
+},
+{
+  name: "Electric Program Investment Charge (EPIC)",
+  category: "Business Development & Business Support",
+  body: "State: CEC",
+  type: "State Grant",
+  eligibility: "Varies by Funding",
+  total: "$130,000,000 annually",
+  max: "Varies by program",
+  timing: "Ongoing",
+  email: "erdd@energy.ca.gov",
+  url: "https://www.energy.ca.gov/programs-and-topics/programs/electric-program-investment-charge-epic-program",
+  summary: "Ratepayer-funded clean energy research grants worth more than $130 million a year. EPIC backs applied research, technology demonstration, and market facilitation across the electricity sector.",
+  detail: "EPIC was established by the Public Utilities Commission in 2012 and is funded by customers of PG&E, Southern California Edison, and San Diego Gas & Electric. The Energy Commission administers the largest share, awarding grants across three investment areas: applied research and development, technology demonstration and deployment, and market facilitation. Typical awardees include technology companies, utilities, universities, national labs, and community organizations working on grid reliability, renewable integration, storage, building and industrial decarbonization, and transportation electrification. The program carries minimum spending commitments for projects sited in and benefiting disadvantaged and low-income communities. Funding is competitive and released through solicitations tied to the current EPIC investment plan; match requirements and intellectual property terms vary by solicitation."
+},
+{
+  name: "Film & TV Soundstage Tax Credit",
+  category: "Business Development & Business Support",
+  body: "State: GO-Biz and CFC",
+  type: "State Tax Credit",
+  eligibility: "Qualified Projects",
+  total: "$150,000,000 one time",
+  max: "$21,000,000 per project or $1,300,000 per episode of a season of television series, inclusive of all uplifts",
+  timing: "First come, first served",
+  email: "soundstageincentive@film.ca.gov",
+  url: "https://film.ca.gov/tax-credit/soundstage-tax-credit/",
+  summary: "A tax credit for productions that shoot on certified California soundstages, allocated first come, first served. It exists to reward and sustain investment in in-state production infrastructure.",
+  detail: "The Soundstage Filming Tax Credit Program runs alongside the main Film & Television Tax Credit and is administered by the California Film Commission. Productions that film at a certified soundstage construction or renovation site can claim credits at the same elevated rates as the main program, and recent changes removed the earlier requirement that a production company own a majority of the stage or hold a ten-year lease — which opened the program to a much wider set of producers and facility partners. Because allocation is first come, first served rather than through a ranked application window, timing matters: applicants that have their certified stage, budget, and start date lined up early have a real advantage. Certified stages to date include facilities at Universal, Paramount, and Warner Bros."
+},
+{
+  name: "Film & TV Tax Credit 4.0",
+  category: "Business Development & Business Support",
+  body: "State: GO-Biz and CFC",
+  type: "State Tax Credit",
+  eligibility: "Eligible Productions",
+  total: "$750,000,000 annually",
+  max: "Varies by applicant type",
+  timing: "Deadline: June 30, 2027",
+  email: "incentiveprogram4@film.ca.gov",
+  url: "https://film.ca.gov/tax-credit/the-basics-4-0/",
+  summary: "California's main film and television incentive, expanded to $750 million a year under Program 4.0. Qualified productions can receive a refundable credit of roughly 35 to 40 percent on qualified in-state spending.",
+  detail: "Program 4.0 more than doubled the prior annual cap and raised the base credit substantially, making California's incentive one of the two largest capped film programs in the country. Eligible project types include feature films, scripted television series, relocating series, independent films, and — newly — animation and competition shows. On top of the base rate, productions can earn uplifts for filming outside the Los Angeles zone, for qualified visual effects spending, for relocating a series to California, and for hiring trainees through the Career Pathways program, subject to rules on which bonuses can be combined. Applications are submitted to the California Film Commission during defined windows and are ranked by a jobs ratio rather than awarded first come, first served. Successful applicants receive a Credit Allocation Letter and must begin principal photography within a set period; a CPA-performed agreed-upon-procedures report is required before the credit certificate is issued. Demand routinely exceeds the allocation."
+},
+{
+  name: "Business and Workforce Development Grants",
+  category: "Business Development & Business Support",
+  body: "State: CAL FIRE",
+  type: "State Grant",
+  eligibility: "Qualified Businesses/Training Entities",
+  total: "Varies by Solicitation",
+  max: "$10,000 – $3,000,000",
+  timing: "Varies, typically Spring and Fall",
+  email: "woodproducts@fire.ca.gov",
+  url: "https://www.fire.ca.gov/what-we-do/grants/business-and-workforce-development-grants",
+  summary: "CAL FIRE grants supporting California's wood products and forest biomass sector, from small business assistance up to $3 million facility projects. Training organizations building the forestry workforce are also eligible.",
+  detail: "Administered through CAL FIRE's Wood Products and Bioenergy program, these grants aim to expand in-state capacity to use the material that comes off forest health and wildfire fuel-reduction work. Funding has supported sawmills and secondary manufacturers, mass timber and engineered wood products, biomass utilization and bioenergy, equipment purchases, feasibility and business planning, and workforce training programs that build the trained labor pool the sector needs. Award sizes span a wide range, from modest planning and technical assistance grants to multi-million dollar facility investments, and solicitations generally open twice a year. Because each solicitation sets its own scope, match, and scoring criteria, it is worth contacting the wood products team before the notice of funding availability is released."
+},
+{
+  name: "California Forest Improvement Program (CFIP)",
+  category: "Business Development & Business Support",
+  body: "State: CAL FIRE",
+  type: "Cost Share",
+  eligibility: "Qualified Land Owners",
+  total: "Up to $2,000,000 per period",
+  max: "Varies",
+  timing: "Solicitation periods close January 2, April 1 and October 1",
+  email: "cfip@fire.ca.gov",
+  url: "https://www.fire.ca.gov/what-we-do/grants/california-forest-improvement",
+  summary: "Cost-share assistance for private forest landowners doing management planning, reforestation, and stand improvement. Three application deadlines run each year.",
+  detail: "CFIP shares the cost of practices that improve the productivity and health of privately owned forestland, generally for owners holding between 20 and 5,000 acres. Eligible activities include preparing a management plan by a registered professional forester, site preparation, tree planting, thinning and release of young stands, pruning, follow-up maintenance, and land conservation practices such as erosion control. The state pays a defined share of approved costs, with the landowner covering the balance in cash or in-kind labor. Applications are reviewed after each of three annual cutoff dates and are prioritized against program criteria rather than funded automatically. Participants take on a maintenance obligation for the funded practice, so read the cost-share agreement carefully before signing."
+},
+{
+  name: "Opportunity Zones 2.0",
+  category: "Business Development & Business Support",
+  body: "Federal Government",
+  type: "Federal Tax Incentive",
+  eligibility: "Place Based Investment",
+  total: "N/A",
+  max: "N/A",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://business.ca.gov/about/contact-us/",
+  url: "https://business.ca.gov/resources/infrastructure-development/opportunity-zones-in-california/",
+  summary: "A federal tax incentive that defers and reduces capital gains tax when gains are rolled into a qualified fund investing in designated low-income census tracts. The benefit sits with the investor, not the operating business.",
+  detail: "Opportunity Zones let an investor defer tax on a realized capital gain by reinvesting it in a Qualified Opportunity Fund, with additional benefit — including potential exclusion of appreciation on the new investment — if the position is held long enough. Funds must deploy capital into qualifying property or businesses located in designated census tracts, and there are substantial-improvement and active-business tests that a project must satisfy to qualify. The incentive is administered federally through the Internal Revenue Service; California has designated tracts and provides mapping and coordination support through GO-Biz, but state conformity to the federal tax treatment has historically been limited, which materially changes the after-tax math for California taxpayers. Confirm current designations, deadlines, and state conformity with a tax advisor before structuring a deal, since the program has been revised by subsequent federal legislation."
+},
+{
+  name: "Research & Development Tax Credit (R&D)",
+  category: "Business Development & Business Support",
+  body: "State: FTB",
+  type: "State Income Tax Credit",
+  eligibility: "Qualified Research",
+  total: "Varies",
+  max: "Varies",
+  timing: "Each taxable year",
+  email: "Contact Page",
+  contactUrl: "https://www.ftb.ca.gov/help/contact/index.html",
+  url: "https://www.ftb.ca.gov/file/business/credits/california-research.html",
+  summary: "An uncapped income tax credit for qualified research conducted in California. It is claimed on the annual return with no application or pre-approval, making it one of the most accessible incentives in the state.",
+  detail: "California's research credit generally equals 15 percent of qualified in-state research expenses above a base amount, plus 24 percent of basic research payments to qualified organizations. Qualified research must be technological in nature, undertaken to develop or improve a product or process, and involve a process of experimentation to eliminate uncertainty — the same four-part test used federally, with California-specific modifications including the requirement that the research be conducted in California. The credit is nonrefundable and nontransferable but can be carried forward indefinitely, which makes it valuable to pre-profit companies that expect future California tax liability. Because there is no cap and no application, the constraint is documentation: contemporaneous records tying wages, supplies, and contract research to specific qualified projects are what survive audit. File FTB Form 3523 with the return."
+},
+{
+  name: "Recycling Market Development Revolving Loan Program",
+  category: "Business Development & Business Support",
+  body: "State: CalRecycle",
+  type: "Loan",
+  eligibility: "California based Recycling Businesses – Private, For Profit Entities, Nonprofit Organizations (except Private Schools), Local Government Entities",
+  total: "TBD",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "bzassist@calrecycle.ca.gov",
+  url: "https://calrecycle.ca.gov/RMDZ/Loans/",
+  summary: "Below-market loans for recycling manufacturers to buy machinery and equipment or expand in California. Interest runs around four percent, with terms negotiated against the borrower's ability to repay.",
+  detail: "CalRecycle runs this revolving loan fund to help manufacturers that use California-generated waste as feedstock finance the equipment, real estate, and working capital they need to site or grow in the state. Eligible borrowers include private for-profit companies, nonprofits other than private schools, and local government entities; the defining test is whether the project expands market demand for recovered material that would otherwise be landfilled. Collateral is required and can include equipment, inventory, receivables, or real estate, and matching funds of at least 25 percent of total project cost are expected. There is an application fee and a closing fee calculated on the loan amount. Application documents are issued on request, so contact the loans team before preparing a package."
+},
+{
+  name: "Greenhouse Gas (GHG) Revolving Loan Program",
+  category: "Business Development & Business Support",
+  body: "State: CalRecycle",
+  type: "Loan",
+  eligibility: "California based Recycling Businesses – Private, For Profit Entities, Nonprofit Organizations (except Private Schools), Local Government Entities",
+  total: "$5,500,000",
+  max: "$2,000,000 or 75% of total project cost, whichever is less",
+  timing: "Ongoing",
+  email: "bzassist@calrecycle.ca.gov",
+  url: "https://calrecycle.ca.gov/funding/ghgloans/",
+  summary: "Loans of up to $2 million for recycling projects that deliver measurable greenhouse gas reductions. It works like the RMDZ loan but adds a quantification and reporting obligation.",
+  detail: "This fund is part of California Climate Investments, which directs cap-and-trade proceeds toward emissions reduction, so the distinguishing requirement is that a borrower must quantify the greenhouse gas reductions the project will achieve and report on them over the life of the loan. Eligible uses mirror the recycling manufacturer loan program — machinery, equipment, and ancillary costs for facilities that use California waste material as feedstock. The loan covers up to $2 million or 75 percent of total project cost, whichever is less, so borrowers should plan on meaningful equity or other financing alongside it. Because the fund is comparatively small, timing matters; contact CalRecycle's business assistance team early to confirm availability and to work through the emissions quantification methodology before applying."
+},
+{
+  name: "Tire Equipment Loan Program",
+  category: "Business Development & Business Support",
+  body: "State: CalRecycle",
+  type: "Loan",
+  eligibility: "California based Recycling Businesses – Private, For Profit Entities, Nonprofit Organizations (except Private Schools), Local Government Entities",
+  total: "$1,000,000 annually",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "bzassist@calrecycle.ca.gov",
+  url: "https://calrecycle.ca.gov/funding/telp/",
+  summary: "Equipment financing for businesses that process or reuse waste tires, with about $1 million allocated each year. The goal is to divert whole tires and tire components from landfills and illegal dumping.",
+  detail: "Approved in 2025, the Tire Equipment Loan Program is a targeted CalRecycle fund that finances machinery and equipment for California businesses developing alternatives to landfill disposal of used tires — crumb rubber production, tire-derived aggregate, retreading, rubberized products, and similar uses. The annual allocation is modest relative to the agency's other loan funds, so the program tends to support equipment purchases rather than full facility builds. Loan terms are negotiable and interest has been running in the range of the agency's other recycling loans. As with CalRecycle's other loan products, collateral and matching funds are expected, and application materials are provided on request through the loans team."
+},
+{
+  name: "Beverage Container Recycling Loan Program",
+  category: "Business Development & Business Support",
+  body: "State: CalRecycle",
+  type: "Loan",
+  eligibility: "California based Recycling Businesses – Private, For Profit Entities, Nonprofit Organizations (except Private Schools), Local Government Entities",
+  total: "$30,000,000",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "bzassist@calrecycle.ca.gov",
+  url: "https://calrecycle.ca.gov/funding/bcrl/",
+  summary: "A $30 million non-revolving fund for beverage container collection, processing, and reuse infrastructure. The fund has a limited life, so the practical window to draw on it is short.",
+  detail: "This program finances the infrastructure that moves beverage containers through the redemption system — processing equipment, sorting and baling capacity, reverse vending, bottle washing for refillable systems, and related facility investment. It was created as a non-revolving fund with a defined expiration, which distinguishes it from CalRecycle's ongoing revolving loan programs: dollars not deployed before the fund sunsets are not recycled back into future lending. Eligible borrowers are California recycling businesses including for-profit companies, most nonprofits, and local government entities. Given the size of the fund relative to the number of potential projects and the limited term, applicants with shovel-ready projects should engage CalRecycle's business assistance team promptly."
+},
+{
+  name: "Recycling Grants",
+  category: "Business Development & Business Support",
+  body: "State: CalRecycle",
+  type: "Grants",
+  eligibility: "Qualified Businesses",
+  total: "Varies",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "grants@calrecycle.ca.gov",
+  url: "https://calrecycle.ca.gov/Funding/",
+  summary: "CalRecycle's rotating portfolio of grants covering organics, reuse, recycling infrastructure, and market development. Individual grant cycles open and close throughout the year with distinct eligibility.",
+  detail: "Rather than a single program, this row covers the set of competitive grants CalRecycle runs across its divisions — organics infrastructure and food waste prevention, reusable beverage container systems, redemption innovation, glass collection pilots, quality incentive payments, and market development for recycled-content products, among others. Eligibility varies sharply by cycle: some are open only to local jurisdictions or tribal entities, while others are aimed squarely at private processors and manufacturers. Notices of funding availability are posted on CalRecycle's funding page with application deadlines, scoring criteria, and match requirements. The most efficient approach is to subscribe to the agency's grant notifications and track the two or three cycles that match your project type rather than monitoring all of them."
+},
+
+/* ---------- EMPLOYMENT & WORKFORCE ---------- */
+{
+  name: "Employment Training Panel (ETP)",
+  category: "Employment & Workforce",
+  body: "State: ETP",
+  type: "Training Reimbursement",
+  eligibility: "Qualified Businesses",
+  total: "Varies",
+  max: "$600,000 or $850,000 (Critical Proposal Designation)",
+  timing: "Ongoing",
+  email: "connect@etp.ca.gov",
+  url: "https://etp.ca.gov/program-overview/",
+  summary: "Reimburses employers for the cost of training current and newly hired workers. Funded by a dedicated payroll tax, so employers who pay into it are the ones who benefit.",
+  detail: "Established in 1982, ETP is California's main employer-driven training subsidy. It reimburses the cost of training that businesses design themselves — the panel funds training, it does not deliver it — with payment made on a fixed-rate-per-hour basis after trainees complete the required hours and are retained at a qualifying wage for a set period. Eligible applicants include single employers subject to the Employment Training Tax, groups of employers such as trade associations and chambers, and training agencies including community colleges. Standard agreements cap at $600,000; projects awarded a Critical Proposal Designation, which GO-Biz Business Investment Services can help request for strategically significant expansions, go up to $850,000. Because reimbursement depends on documented hours and retention, the administrative discipline around tracking is what determines how much an employer actually collects."
+},
+{
+  name: "Fidelity Bonding",
+  category: "Employment & Workforce",
+  body: "State: EDD",
+  type: "Business Insurance",
+  eligibility: "Qualified Employers",
+  total: "N/A",
+  max: "$5,000 – $15,000 per employee",
+  timing: "N/A",
+  email: "wsbbonding@edd.ca.gov",
+  url: "https://edd.ca.gov/en/jobs_and_training/Information_Notices/wsin18-17/",
+  summary: "Free insurance protecting employers against theft or dishonesty by an at-risk new hire. It removes a common objection to hiring people with records or gaps in work history.",
+  detail: "The Fidelity Bonding Program provides a no-cost commercial fidelity bond covering an employer against loss from employee theft, forgery, larceny, or embezzlement by a bonded worker. It is aimed at job seekers who are otherwise qualified but cannot be commercially bonded — people with criminal records, people in recovery, individuals with poor credit, and others facing barriers to employment. Coverage is issued in increments and typically runs for a defined initial period, after which the worker has an employment history that supports conventional bonding. There is no cost to the employer, the employee, or the job seeker, and no deductible. Bonds are arranged through America's Job Center of California locations and the state's workforce services bonding coordinator, usually at the point a job offer is being made."
+},
+{
+  name: "Homeless Hiring Tax Credit",
+  category: "Employment & Workforce",
+  body: "State: FTB",
+  type: "State Income Tax Credit",
+  eligibility: "Qualified Businesses",
+  total: "$2,500 – $10,000 per hire",
+  max: "$30,000,000 credit annually",
+  timing: "Each taxable year",
+  email: "ftbhhtc@ftb.ca.gov",
+  url: "https://www.ftb.ca.gov/file/business/credits/homeless-hiring-tax-credit/index.html",
+  summary: "An income tax credit of $2,500 to $10,000 per eligible employee hired from homelessness. The credit scales with hours worked and requires a reservation from the Franchise Tax Board.",
+  detail: "Created by AB 150 in 2021, the Homeless Hiring Tax Credit is available to employers who hire and retain individuals who were homeless on the hire date or during the preceding 180 days, or who are receiving services from a designated homeless services provider. To qualify, the employer must pay wages subject to California withholding, pay at least 120 percent of minimum wage, obtain a certification for each eligible individual from a continuum of care or qualifying provider, and reserve the credit with FTB within a set window after the hire. Credit value rises with the hours the employee works during the taxable year, topping out at $10,000 per employee, and the employee must be retained for a minimum period. Note that the guide's table lists the per-hire range under total available and the $30 million annual program cap under maximum award; the per-hire figure is the employer-level amount and the $30 million is the statewide annual limit."
+},
+{
+  name: "Joint Venture Program",
+  category: "Employment & Workforce",
+  body: "State: CALPIA",
+  type: "Multiple",
+  eligibility: "Qualified Employers",
+  total: "Varies",
+  max: "Tax Credit = 10% of wages",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://jointventureprogram.calctra.ca.gov/contact-us/",
+  url: "https://jointventureprogram.calctra.ca.gov/",
+  summary: "Lets a private company operate a production facility inside a California prison using incarcerated labor at comparable wages. Employers save on benefits overhead and can claim a credit equal to 10 percent of wages paid.",
+  detail: "The Joint Venture Program is run by the California Prison Industry Authority and allows private businesses to establish operations within state correctional facilities. Participating employers pay wages comparable to those for similar work in the surrounding community, but avoid much of the benefits and facilities cost that would apply outside, and they gain access to a workforce that is stable and motivated to build job skills. A state tax credit equal to 10 percent of wages paid to participating workers is available. Employers provide equipment, training, supervision, and quality control; CALPIA coordinates space, worker recruitment, and security requirements. The model suits light manufacturing, assembly, packaging, and service operations with predictable throughput, and it carries reporting and labor-standard obligations that should be reviewed with counsel before committing."
+},
+{
+  name: "New Employment Tax Credit for Semiconductor, Electric Airplane, Lithium Production, and Lithium Battery Manufacturing",
+  category: "Employment & Workforce",
+  body: "State: FTB",
+  type: "State Income Tax Credit",
+  eligibility: "Qualified Businesses",
+  total: "N/A",
+  max: "Varies",
+  timing: "Each taxable year",
+  email: "gedi@ftb.ca.gov",
+  url: "https://www.ftb.ca.gov/file/business/credits/new-employment-credit/nec-seal-credit.html",
+  summary: "An expanded version of the New Employment Credit aimed at four strategic manufacturing sectors. Qualifying employers earn a credit on wages paid to new full-time hires above a base employment level.",
+  detail: "The New Employment Credit provides an income tax credit calculated on qualified wages — generally wages in a band above minimum wage — paid to qualified full-time employees hired above the employer's base year headcount. This variant extends the credit to semiconductor manufacturing and research, electric airplane manufacturing, lithium production, and lithium battery manufacturing, reflecting state priorities around supply chain and clean technology. The mechanics are demanding: the employer must obtain a tentative credit reservation from FTB within 30 days of completing the new hire's payroll enrollment, employees must meet hours and wage thresholds, and an annual certification is required. The credit is subject to recapture if employment levels are not maintained. Employers in these sectors planning a California expansion should build the reservation step into their onboarding process, since a missed reservation cannot be cured later."
+},
+{
+  name: "Work Sharing",
+  category: "Employment & Workforce",
+  body: "State: EDD",
+  type: "Layoff and UI Alternative",
+  eligibility: "Eligible Employers",
+  total: "Based on Employer UI",
+  max: "Based on Unemployment Insurance",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://edd.ca.gov/en/about_edd/contact_edd/",
+  url: "https://edd.ca.gov/en/Unemployment/Work_Sharing_Program",
+  summary: "Lets an employer cut hours across a group of workers instead of laying people off, with partial unemployment benefits making up part of the lost wages. The workforce stays intact through a downturn.",
+  detail: "Work Sharing is an alternative to layoff for employers facing a temporary reduction in business. The employer reduces hours and wages for at least 10 percent of the workforce in an affected unit, by between 10 and 60 percent, and affected employees collect a prorated share of their weekly unemployment benefit for the hours lost. Employees keep their jobs, their seniority, and — critically for many employers — their health and retirement benefits, which must be maintained at the pre-reduction level or at the level of a comparable non-participating employee. The employer applies for a Work Sharing plan with EDD, which runs for a defined period and can be renewed. The main trade-off is that benefits paid are charged against the employer's unemployment insurance reserve account, which affects future UI rates, so the cost should be weighed against the cost of losing and re-recruiting trained staff."
+},
+
+/* ---------- EQUIPMENT & MACHINERY ---------- */
+{
+  name: "Carl Moyer On-Road Heavy-Duty Vehicle Voucher Incentive Program",
+  category: "Equipment & Machinery",
+  body: "State & Local: CARB",
+  type: "Grant",
+  eligibility: "Qualified Businesses",
+  total: "Varies",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "moyerhelp@arb.ca.gov",
+  url: "https://ww2.arb.ca.gov/our-work/programs/carl-moyer-memorial-air-quality-standards-attainment-program",
+  summary: "Grants to replace, repower, or retrofit older heavy-duty on-road engines with cleaner ones. Funds are issued locally by air districts, so availability depends on where you operate.",
+  detail: "The Carl Moyer Program has been running since 1998 and has granted close to a billion dollars to equipment owners, with roughly $60 million a year still flowing. It funds emission reductions that go beyond what regulation already requires, which is why eligibility hinges on scrapping or permanently retiring the old engine rather than simply buying something new. On-road categories include heavy-duty trucks and buses over 14,000 pounds, school buses, transit vehicles, drayage trucks, public agency and utility fleets, emergency vehicles, and solid waste collection vehicles. The program is implemented through California's 35 local air pollution control and air quality management districts, and not every district funds every project type in every cycle. Contact your local air district first for current funding availability, eligibility, and application timing — CARB sets guidelines but the money is awarded locally."
+},
+{
+  name: "Clean Off-Road Equipment Voucher (CORE)",
+  category: "Equipment & Machinery",
+  body: "State: CARB",
+  type: "Point-of-Sale Discount",
+  eligibility: "Off-Road Equipment Users",
+  total: "Varies",
+  max: "Varies by equipment",
+  timing: "Reopens Fall 2026",
+  email: "core@arb.ca.gov",
+  url: "https://californiacore.org/ticker/",
+  summary: "Point-of-sale vouchers that cut the purchase price of zero-emission off-road equipment. There is no scrappage requirement, and extra funding is available for infrastructure and small businesses.",
+  detail: "CORE is the off-road counterpart to HVIP, designed to close the cost gap between a conventional machine and its zero-emission equivalent. Eligible equipment spans terminal tractors, cargo handling equipment, transport refrigeration units, construction and earthmoving machines, agricultural and airport ground support equipment, and large lawn and landscape gear. The voucher is applied at the point of sale through a participating dealer, so the buyer never fronts the full amount and waits for reimbursement. Unlike Carl Moyer, CORE does not require scrapping existing equipment, and it offers additional funding for the charging or fueling infrastructure the equipment needs plus a small business increase. Demand has exceeded available funding in every cycle since 2020, so have equipment selection and dealer paperwork ready before the window opens."
+},
+{
+  name: "FARMER Program",
+  category: "Equipment & Machinery",
+  body: "State & Local: CARB",
+  type: "State Grant",
+  eligibility: "Agriculture Business",
+  total: "N/A",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "farmer@arb.ca.gov",
+  url: "https://ww2.arb.ca.gov/our-work/programs/farmer-program/how-apply-farmer-funding",
+  summary: "Grants for agricultural operations to replace older tractors, harvesters, irrigation pumps, and other equipment with cleaner models. Administered through local air districts on a rolling basis.",
+  detail: "Funding Agricultural Replacement Measures for Emission Reductions, known as FARMER, targets the agricultural equipment fleet — one of the larger remaining sources of diesel emissions in the San Joaquin Valley and other farming regions. Eligible projects include replacing agricultural tractors and self-propelled harvesting equipment, repowering or replacing irrigation pump engines, upgrading heavy-duty agricultural trucks, and in some districts purchasing zero-emission utility vehicles or supporting equipment. As with Carl Moyer, funds are passed through to local air districts, which run their own application cycles and set local priorities within CARB's program guidelines. Cost-share percentages typically rise for smaller operations and for projects in disadvantaged communities. Growers should contact their local air district to confirm what is currently funded, since district cycles rarely align with each other."
+},
+{
+  name: "F-Gas Emission Reduction Incentive",
+  category: "Equipment & Machinery",
+  body: "State: CARB",
+  type: "State Grant",
+  eligibility: "Retail Food Facilities",
+  total: "$38,500,000",
+  max: "Up to $500,000",
+  timing: "TBD",
+  email: "frip@arb.ca.gov",
+  url: "https://ww2.arb.ca.gov/our-work/programs/FRIP",
+  summary: "Up to $500,000 per site for grocery stores and other retail food facilities to convert refrigeration to low-global-warming refrigerants. A $38.5 million pool supports the transition.",
+  detail: "Commercial refrigeration is a significant source of fluorinated greenhouse gas emissions, and replacing a legacy system is expensive enough that most operators defer it. This program offsets that cost for retail food facilities — supermarkets, grocery stores, convenience stores, and similar operations — installing refrigeration systems that use refrigerants with a low global warming potential, typically natural refrigerants such as CO2 or propane in approved configurations. Funding has prioritized independent and small-chain operators and stores serving disadvantaged communities, since large chains have more capacity to self-fund. Award amounts scale with the size and type of system installed, up to the $500,000 cap. Application timing is set by CARB and has run in defined cycles; contact the program team to confirm when the next window opens and what equipment qualifies."
+},
+{
+  name: "Sales and Use Tax Exclusion Program (STE) (CAEATFA)",
+  category: "Equipment & Machinery",
+  body: "State: STO-CAEATFA",
+  type: "Sales Tax Exclusion Program",
+  eligibility: "Qualified Purchasers",
+  total: "TBD",
+  max: "TBD",
+  timing: "TBD",
+  email: "jeannie.yu@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/caeatfa/ste",
+  summary: "A full exclusion from sales and use tax on qualifying manufacturing equipment for advanced manufacturing, alternative energy, and advanced transportation projects. Unlike the CDTFA partial exemptions, this one requires an application and board approval.",
+  detail: "CAEATFA's Sales and Use Tax Exclusion is the deepest equipment tax benefit California offers: it excludes the full sales and use tax — state, local, and district — on qualified tangible personal property, rather than just the state portion. Eligible projects fall into three buckets: manufacturers of alternative energy or advanced transportation products, advanced manufacturers, and facilities that process recycled feedstock. Applicants submit a formal application, pay a fee, and are scored on a net-benefits test that weighs the fiscal and environmental benefits of the project against the revenue the state forgoes. Approved applicants receive a Regulatory Agreement and then purchase equipment tax-free for a defined period. Because the program has an annual cap, application timing and the strength of the net-benefits case both matter; engage CAEATFA staff before filing."
+},
+{
+  name: "Clean Truck and Bus Voucher Incentive Project (HVIP)",
+  category: "Equipment & Machinery",
+  body: "State: CARB",
+  type: "Point-of-Sale Discount",
+  eligibility: "Qualified Vehicle Purchasers",
+  total: "Varies",
+  max: "Varies",
+  timing: "Varies",
+  email: "info@californiahvip.org",
+  url: "https://californiahvip.org/",
+  summary: "Point-of-sale vouchers that reduce the price of zero-emission and near-zero-emission trucks and buses. Vouchers are applied by the dealer, with no scrappage requirement.",
+  detail: "HVIP has been running since 2009 and is the most widely used clean vehicle incentive for California fleets. Buyers choose from a published list of eligible vehicles, and a participating dealer applies the voucher directly against the purchase price, so the fleet's out-of-pocket cost drops at the point of sale rather than months later. Voucher amounts vary by vehicle class, technology, and fleet characteristics, with increases available for small fleets, for public transit, and for vehicles domiciled in or serving disadvantaged communities. Vehicles must be operated in California for a minimum period. Funding opens in defined windows and has historically been claimed quickly; CALSTART administers the project on CARB's behalf, and its site carries the current eligible vehicle list, voucher amounts, and window status."
+},
+{
+  name: "Partial Sales & Use Tax Exemption – Farm Equipment and Machinery",
+  category: "Equipment & Machinery",
+  body: "State: CDTFA",
+  type: "Sales Tax Exemption",
+  eligibility: "Qualified Purchasers",
+  total: "State exemption of 5%",
+  max: "N/A",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://cdtfa.ca.gov/contact.htm",
+  url: "https://cdtfa.ca.gov/taxes-and-fees/sales-and-use-tax-exemptions.htm",
+  summary: "Exempts the state portion of sales and use tax on farm equipment and machinery bought by qualified persons. No application is required — you give the seller an exemption certificate at purchase.",
+  detail: "Under Regulation 1533.1, a qualified person engaged in agricultural production may buy or lease farm equipment, machinery, and their parts free of the state portion of sales and use tax. Local, city, county, and district taxes still apply, so this reduces rather than eliminates tax on the purchase. The equipment must be used primarily in producing and harvesting agricultural products. To claim it, the purchaser gives the retailer CDTFA-230-D, the partial exemption certificate, either per transaction or as a blanket certificate for recurring purchases. There is no pre-approval and no cap, but the purchaser bears the risk: if the property turns out not to have been used in a qualifying manner, the purchaser owes the tax plus interest and potential penalties, so keep records supporting qualifying use."
+},
+{
+  name: "Partial Sales & Use Tax Exemption – Diesel Fuel",
+  category: "Equipment & Machinery",
+  body: "State: CDTFA",
+  type: "Sales Tax Exemption",
+  eligibility: "Qualified Purchasers",
+  total: "State exemption of 5%",
+  max: "N/A",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://cdtfa.ca.gov/contact.htm",
+  url: "https://cdtfa.ca.gov/taxes-and-fees/sales-and-use-tax-exemptions.htm",
+  summary: "Exempts the state portion of sales and use tax on diesel used in farming and food processing. Claimed with an exemption certificate at the time of purchase.",
+  detail: "Regulation 1533.2 provides a partial exemption for diesel fuel used in farming activities and food processing. Qualifying fuel may be burned in a motor vehicle or in other equipment such as generators and pumps, provided the use falls within the defined farming or food processing activities. Only the state portion of the rate is exempt; local and district taxes remain due, as do the separate diesel fuel excise taxes, which this exemption does not touch. The purchaser provides the seller with CDTFA-230-G, which can be issued per purchase or as a blanket certificate. As with the other partial exemptions, there is no application process and no dollar cap, and the burden of substantiating qualifying use sits with the purchaser."
+},
+{
+  name: "Partial Sales & Use Tax Exemption – Manufacturing & Research & Development",
+  category: "Equipment & Machinery",
+  body: "State: CDTFA",
+  type: "Sales Tax Exemption",
+  eligibility: "Qualified Purchasers",
+  total: "State exemption of 3.9375%",
+  max: "$200,000,000 per year",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://cdtfa.ca.gov/contact.htm",
+  url: "https://cdtfa.ca.gov/taxes-and-fees/sales-and-use-tax-exemptions.htm",
+  summary: "Reduces sales and use tax on manufacturing and R&D equipment for qualified persons, on up to $200 million of purchases a year. No application is needed — the exemption is claimed with a certificate.",
+  detail: "This is the broadest equipment tax break most California manufacturers will use. A qualified person — generally a business whose primary line falls within NAICS 3111 to 3399, or within R&D codes 541711 and 541712, plus specified electric power generation and distribution and certain agricultural businesses — pays a reduced rate on qualifying tangible personal property. Qualifying property includes machinery and equipment with a useful life over one year, certain special purpose buildings and foundations, and pollution control equipment, used primarily in manufacturing, processing, R&D, or maintaining that equipment. The exemption applies to the state portion only; district taxes still apply. Purchases are limited to $200 million per calendar year. To claim it, give the seller CDTFA-230-M, or CDTFA-230-MC where a construction contractor is involved. The law's current sunset is June 30, 2030."
+},
+{
+  name: "Partial Sales & Use Tax Exemption – Teleproduction",
+  category: "Equipment & Machinery",
+  body: "State: CDTFA",
+  type: "Sales Tax Exemption",
+  eligibility: "Qualified Purchasers",
+  total: "State exemption of 5%",
+  max: "N/A",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://cdtfa.ca.gov/contact.htm",
+  url: "https://cdtfa.ca.gov/taxes-and-fees/sales-and-use-tax-exemptions.htm",
+  summary: "Exempts the state portion of sales and use tax on equipment used in teleproduction and post-production services. Applies to purchases, leases, and maintenance property.",
+  detail: "Section 6378 provides a partial exemption for machinery, equipment, and component parts bought by a qualified person and used primarily in teleproduction or other post-production services — editing, color, sound, visual effects, mastering, and related work. The exemption also covers property used to maintain, repair, measure, or test qualifying equipment, and it extends to rental receipts paid by a qualified person for qualifying equipment. Only the state rate is exempt; local, city, county, and district taxes still apply. A purchaser who provides an exemption certificate and then uses the property for something other than qualifying post-production work becomes liable for the state tax plus interest and any applicable penalties, so records supporting qualifying use should be retained. Certificates CDTFA-230-J and CDTFA-230-K apply."
+},
+{
+  name: "Partial Sales & Use Tax Exemption – Timber Harvest",
+  category: "Equipment & Machinery",
+  body: "State: CDTFA",
+  type: "Sales Tax Exemption",
+  eligibility: "Qualified Purchasers",
+  total: "State exemption of 5%",
+  max: "N/A",
+  timing: "Ongoing",
+  email: "Contact Page",
+  contactUrl: "https://cdtfa.ca.gov/contact.htm",
+  url: "https://cdtfa.ca.gov/taxes-and-fees/sales-and-use-tax-exemptions.htm",
+  summary: "Exempts the state portion of sales and use tax on off-road commercial timber harvesting equipment. Leases qualify as well as purchases.",
+  detail: "Section 6356.6 provides a partial exemption for equipment, machinery, and parts designed primarily for off-road use in commercial timber harvesting operations by a qualified person, and it applies to leases measured by rentals payable as well as to outright purchases. The exemption covers only the state general fund portion of the rate, leaving local and district taxes due. Qualifying purchasers also commonly claim the exemption on oil, grease, and lubricating fluids to the extent those are used in qualifying timber harvesting equipment, which the certificate accommodates by asking for a use percentage. Claiming is done by providing the seller with CDTFA-230-H at the time of purchase; the certificate stays in effect until revoked in writing."
+},
+
+/* ---------- FINANCING & START UP SUPPORT ---------- */
+{
+  name: "CalCAP ADA Retrofits",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Credit Enhancement for Lending to Small Businesses",
+  eligibility: "Loans to Small Businesses of 30 Employees or Annual Income of less than $5,000,000 for ADA accessibility improvements to a facility of 10,000 square feet or less",
+  total: "N/A",
+  max: "Loan loss reserve credit enhancement to participating lender for loan up to $50,000",
+  timing: "Ongoing",
+  email: "calcap@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/calcap/ada/general_info",
+  summary: "Backs small loans for accessibility upgrades by covering a lender's potential loss. Aimed at very small businesses making ADA improvements to modest facilities.",
+  detail: "CalCAP ADA is a loan loss reserve program: it does not lend money directly, it makes a participating financial institution more willing to lend by building a reserve that can cover up to 100 percent of the lender's claim if an enrolled loan defaults. Eligible borrowers are small businesses with 30 or fewer employees or under $5 million in annual income, borrowing up to $50,000 for accessibility improvements to a facility of 10,000 square feet or less — ramps, restroom modifications, door hardware, parking, signage, and similar work. The borrower applies to a participating lender in the normal way; the lender underwrites, disburses, and then enrolls the loan. If no claim is made during the enrollment term, the contributions recycle back into the program. Start by identifying a participating lender from CPCFA's list."
+},
+{
+  name: "CalCAP Collateral Support (CalCAP CS)",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Credit Enhancement for Lending to Small Businesses and Non-Profits",
+  eligibility: "Term loans, interim loans, or lines of credit to small businesses or non-profits up to 750 employees. Loan purposes include working capital, inventory, equipment, business expansion, commercial real estate, and other eligible business purposes",
+  total: "N/A",
+  max: "Collateral support credit enhancement to participating lender for lending from $25,000 to $20,000,000",
+  timing: "Ongoing",
+  email: "calcap@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/calcap/collateral",
+  summary: "Provides cash collateral to close the gap when a borrower's collateral falls short of what the lender requires. Supports loans from $25,000 up to $20 million.",
+  detail: "Collateral Support works differently from the loan loss reserve programs: CPCFA pledges a cash deposit alongside the borrower's own collateral, which lets the lender approve a loan that would otherwise fail its collateral coverage test. This is the CalCAP product for asset-light businesses and for growing companies whose borrowing need has outrun their balance sheet — a common problem for manufacturers buying equipment, contractors scaling up, and businesses acquiring commercial real estate. Eligible borrowers are small businesses and nonprofits with up to 750 employees, and eligible uses are broad: working capital, inventory, equipment, expansion, and commercial real estate among them. The support declines over the life of the loan as the borrower builds equity. As with all CalCAP programs, the borrower works through a participating financial institution rather than applying to the state."
+},
+{
+  name: "CalCAP Seismic Safety (CalCAP Seismic)",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Credit Enhancement for Lending to Property Owners",
+  eligibility: "Loans to business and residential property owners with eligible seismic upgrade projects",
+  total: "N/A",
+  max: "Loan loss reserve credit enhancement to participating lender for loan to property owner for up to $250,000",
+  timing: "Ongoing",
+  email: "calcap@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/calcap/seismic",
+  summary: "Supports lending of up to $250,000 for seismic retrofit construction on existing buildings. Covers both commercial and residential property owners, including small businesses that own their premises.",
+  detail: "Authorized by SB 837 in 2016, CalCAP Seismic is a loan loss reserve that gives a participating financial institution a post-disbursement risk management tool when it lends for seismic retrofit work. Eligible projects include repairing or reinforcing a foundation to improve its integrity against seismic damage and strengthening a building's lateral load resisting system — soft-story retrofits being the common case. Repairs to damage already caused by an earthquake are excluded; this is a program for work done in advance. Lenders choose which loans to enroll and can customize the proportion enrolled, the enrollment term, and the contribution percentage, which gives them flexibility in pricing. Borrowers approach a participating lender directly; CPCFA maintains the list of institutions currently enrolled across all CalCAP programs."
+},
+{
+  name: "CalCAP for Small Business (CalCAP SB)",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Credit Enhancement for Lending to Small Businesses and Non-Profits",
+  eligibility: "Loans or lines of credit made to small businesses or non-profits with up to 500 employees. Loan purposes include working capital, inventory, equipment, business expansion, commercial real estate, and other eligible business purposes",
+  total: "N/A",
+  max: "Loan loss reserve credit enhancement to participating lender for lending up to $5,000,000",
+  timing: "Ongoing",
+  email: "calcap@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/calcap/sb/general_info",
+  summary: "The original CalCAP program, backing small business loans up to $5 million with a lender loan loss reserve. Broad eligibility makes it the default starting point among the CalCAP products.",
+  detail: "Launched in 1994, CalCAP for Small Business is the parent program from which the other CalCAP products grew. It builds a loan loss reserve account for each participating lender, funded by contributions from the borrower, the lender, and the state, that can be drawn on to cover losses on enrolled loans. Because the reserve is portfolio-level rather than loan-specific, lenders can use it to say yes to borrowers who sit just outside conventional credit standards. Eligible borrowers are small businesses and nonprofits with up to 500 employees with a business activity in California, and eligible uses cover most ordinary business purposes: working capital, inventory, equipment, expansion, commercial real estate, and startup costs. The borrower's role is to find a participating lender and apply normally; enrollment happens on the lender's side after disbursement."
+},
+{
+  name: "CalCAP Zero-Emission Heavy-Duty Program",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Credit Enhancement for Zero-Emission Vehicle and Infrastructure Financing for Small Businesses and Non-Profits",
+  eligibility: "Loans or leases made to owner-operators, small fleets, and certain larger fleets for zero-emission medium and heavy-duty vehicles, supporting infrastructure, and related eligible costs",
+  total: "N/A",
+  max: "Loan loss reserve credit enhancement to participating lender for loan or lease",
+  timing: "Ongoing",
+  email: "calcap@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/calcap/zero-emission",
+  summary: "Credit enhancement for financing zero-emission medium and heavy-duty vehicles and the infrastructure to run them. Built for owner-operators and small fleets that struggle to finance a ZEV truck.",
+  detail: "This is the CalCAP family aimed squarely at the fleet transition, covering vehicle loans and leases as well as charging and fueling infrastructure and related eligible costs. It matters because a zero-emission Class 8 tractor can cost two to three times its diesel equivalent, and the residual value picture is still unsettled — which makes conventional lenders cautious, particularly with owner-operators and small fleets that have thin balance sheets. The loan loss reserve gives the lender or lessor protection that makes those deals financeable. The program pairs naturally with HVIP vouchers, which reduce the purchase price, and with utility make-ready programs for the infrastructure side. Borrowers work through a participating financial institution; CPCFA's site lists current participants and the sub-programs covering vehicles, infrastructure, and truck-bus infrastructure financing."
+},
+{
+  name: "CalCAP Loan Participation Program",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Credit Enhancement for Lending to Small Businesses with Contracts",
+  eligibility: "Lines of credit, interim loans, and term loans made to small businesses with up to 750 employees; financing supports the small business's ability to carry out a public or private contract and can include working capital, equipment, business expansion, contract performance, commercial real estate, and other eligible business purposes",
+  total: "N/A",
+  max: "Participating in lending from $100,000 to $20,000,000",
+  timing: "Ongoing",
+  email: "calcap@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/calcap/LPP",
+  summary: "The state takes a participation in a lender's loan to a small business performing a public or private contract. Supports financing from $100,000 to $20 million.",
+  detail: "Loan Participation is structurally different from the loan loss reserve products: instead of building a reserve against losses, CPCFA buys a share of the loan itself, putting state capital alongside the lender's and reducing the lender's exposure directly. It is aimed at contract-driven businesses — construction firms, service providers, and suppliers with awarded public or private contracts — whose financing need is tied to performing work they have already won. Eligible borrowers are small businesses with up to 750 employees, and eligible uses include working capital, equipment, contract performance costs, expansion, and commercial real estate. The size range makes it useful for deals larger than most small business credit enhancements reach. Confirm current program status and participating lenders with CPCFA before structuring a transaction."
+},
+{
+  name: "California Investment and Innovation Program (CAL IIP)",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Grants to community development financial institutions",
+  eligibility: "Grants to CDFI Fund-certified community development financial institutions that serve California and provide financial products and services to underserved communities",
+  total: "Subject to state appropriations and available funding",
+  max: "Grant award amounts vary by funding cycle, available funding, and number of eligible applicants",
+  timing: "Ongoing",
+  email: "caliip@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/caliip",
+  summary: "Grants that strengthen the CDFIs lending into underserved California communities. Businesses benefit indirectly, through better-capitalized community lenders.",
+  detail: "Cal IIP makes grants to community development financial institutions certified by the U.S. Treasury's CDFI Fund that serve California and deliver financial products and services to underserved communities. The grants build CDFI capacity — capital for on-lending, technical assistance capability, and operating support — so the direct applicants are the institutions themselves rather than the small businesses they serve. For a business, the relevance is indirect but real: CDFIs are often the lender of last resort for borrowers who cannot clear a bank's credit box, and many participate in the CalCAP programs, so a stronger CDFI network expands the practical set of lenders available. Award sizes vary by cycle depending on appropriations and the number of qualified applicants."
+},
+{
+  name: "California Sustainable Energy Entrepreneur Development Funding (CALSEED)",
+  category: "Financing & Start Up Support",
+  body: "State: CEC",
+  type: "State Grant",
+  eligibility: "Clean energy start-ups",
+  total: "Varies by Fiscal Year",
+  max: "$700,000",
+  timing: "Ongoing",
+  email: "info@calseed.fund",
+  url: "https://calseed.fund/",
+  summary: "Early-stage grant funding for clean energy startups, up to $700,000. Non-dilutive capital plus business support for concepts that are too early for venture investment.",
+  detail: "CALSEED fills the gap between a promising clean energy concept and the point where private capital will engage. It awards non-dilutive grants in stages — a smaller concept award to prove technical feasibility, followed by a larger prototype award for companies that hit their milestones — with total funding reaching $700,000 for a company that advances through both. Alongside the money, awardees get business development support, mentoring, and connections into California's clean energy innovation network, which for a first-time founder is often as valuable as the grant. Eligible applicants are early-stage California companies working on technologies that advance the state's energy goals: storage, efficiency, grid technologies, building and industrial decarbonization, and related areas. The program is administered on the Energy Commission's behalf through the Energize Innovation ecosystem; application rounds open periodically."
+},
+{
+  name: "Climate Catalyst Program",
+  category: "Financing & Start Up Support",
+  body: "State: IBank",
+  type: "Loan Guarantee",
+  eligibility: "Based on type",
+  total: "Varies",
+  max: "$40,000,000",
+  timing: "Not accepting new applications",
+  email: "climatefinancing@ibank.ca.gov",
+  url: "https://ibank.ca.gov/climate-financing/climate-catalyst-program/",
+  summary: "IBank's revolving fund for climate-related projects, with loans up to $40 million. Currently closed to new applications, though prior commitments continue.",
+  detail: "The Climate Catalyst Revolving Loan Fund was created to provide low-cost capital to climate projects that struggle to attract conventional financing — forest biomass utilization, wildfire resilience, agricultural decarbonization, and similar sectors where the technology is proven but the financing market is thin. Loans could reach $40 million. The program is not currently accepting new applications, which reflects the appropriation cycle rather than a permanent closure, and IBank has periodically reopened targeted calls, including for forest biomass projects. Businesses with projects that would fit should still contact the climate financing team, both to be notified if the fund reopens and because IBank may be able to route the project to another of its products, such as Climate Tech Finance or the Small Business Loan Guarantee."
+},
+{
+  name: "Climate Tech Finance",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "Loan Guarantee",
+  eligibility: "Qualifying businesses with up to 750 employees",
+  total: "N/A",
+  max: "$5,000,000 maximum guarantee amount / $20,000,000 maximum loan amount",
+  timing: "Ongoing",
+  email: "ctf@baaqmd.gov",
+  url: "https://ctf.baaqmd.gov/",
+  summary: "A loan guarantee of up to $5 million for climate technology companies, on loans up to $20 million. Delivered in partnership with the Bay Area Air District, which validates the technology's emissions benefit.",
+  detail: "Climate Tech Finance combines IBank's loan guarantee with technical validation from the Bay Area Air Quality Management District. The air district assesses whether the company's technology delivers a genuine greenhouse gas reduction, and that assessment supports a guarantee of up to $5 million covering a loan of up to $20 million from a participating lender. The structure addresses a specific problem: climate hardware companies often have contracts, customers, and a working product but lack the collateral or operating history a bank needs, and their technology risk is outside a commercial lender's competence to assess. Eligible borrowers are businesses with up to 750 employees. The program is available statewide despite the air district's regional base. Contact the Climate Tech Finance team early, since technology validation takes time and runs in parallel with lender underwriting."
+},
+{
+  name: "Cleanup & Brownfield Assistance",
+  category: "Financing & Start Up Support",
+  body: "State: DTSC",
+  type: "State Loan or Grant",
+  eligibility: "Qualified projects",
+  total: "Varies",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "maryam.tasnifabbasi@dtsc.ca.gov",
+  url: "https://dtsc.ca.gov/brownfields/loans-and-grants/",
+  summary: "Loans and grants to assess and clean up contaminated sites so they can be redeveloped. Removes the environmental unknown that keeps many infill parcels off the market.",
+  detail: "The Department of Toxic Substances Control administers assistance for brownfield sites — properties where real or perceived contamination complicates reuse. Support can cover Phase I and Phase II site assessments, cleanup planning, and remediation itself, delivered as grants or low-interest loans depending on the applicant and the site. Just as valuable as the money are DTSC's regulatory tools: voluntary cleanup agreements that give a developer a defined path and, on completion, documentation such as a no further action determination that lenders and buyers will accept. Eligible applicants include local governments, developers, and private parties who did not cause the contamination. Because each site turns on its own history and regulatory posture, the practical first step is a conversation with DTSC's brownfields team before acquisition or entitlement."
+},
+{
+  name: "Tax-Exempt Private Activity Bond and Industrial Development Bond Financing Program (Tax-Exempt Bond)",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Tax-Exempt Conduit Bond Financing",
+  eligibility: "Businesses of any size, non-profits, and public-private partnerships with eligible recycling, solid waste, water supply, wastewater, carbon dioxide capture, or certain industrial development projects",
+  total: "N/A",
+  max: "Amount of bond issuance based on project eligibility and allocation availability",
+  timing: "Ongoing",
+  email: "cpcfabond@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/tax-exempt",
+  summary: "Conduit tax-exempt bond financing for environmental infrastructure and qualifying industrial projects. Investors accept lower yields because the interest is tax-exempt, cutting the borrower's cost of capital.",
+  detail: "CPCFA acts as a conduit issuer: it issues bonds on behalf of a private borrower, the borrower repays them, and the state carries no liability for repayment. The benefit is pricing — because interest is exempt from federal and often state income tax, investors accept a materially lower yield than on comparable taxable debt. Eligible project categories are defined by federal tax law and include solid waste disposal and recycling facilities, water furnishing, sewage and wastewater treatment, carbon dioxide capture, and small issue industrial development for manufacturing. Businesses of any size can apply, along with nonprofits and public-private partnerships. Tax-exempt private activity bonds draw on a limited state volume cap allocated by the California Debt Limit Allocation Committee, so timing and allocation availability are real constraints. Transactions require bond counsel and a credit source, so start with CPCFA's bond team to test eligibility before incurring costs."
+},
+{
+  name: "Disaster Relief Loan Guarantee",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "Loan Guarantee",
+  eligibility: "Business in disaster area",
+  total: "N/A",
+  max: "$1,000,000 maximum guarantee / $1,250,000 maximum loan amount",
+  timing: "Ongoing",
+  email: "sbfc-programs@ibank.ca.gov",
+  url: "https://ibank.ca.gov/small-business/disaster-relief/",
+  summary: "Guarantees loans of up to $1.25 million for businesses recovering in a declared disaster area. Open to businesses that cannot qualify for or are waiting on federal disaster assistance.",
+  detail: "Administered through IBank's Small Business Finance Center, this program guarantees up to $1 million of a loan of up to $1.25 million for businesses located in a declared disaster area, working through the state's network of Financial Development Corporations and participating lenders. It is designed to cover the gaps in federal disaster assistance: businesses that do not qualify for an SBA disaster loan, businesses that need bridge capital while a federal application is pending, and businesses whose need exceeds what federal programs will cover. Eligible uses include repair and replacement, working capital, and inventory. The FDC network handles intake and packaging, which is generally faster and more accommodating than a conventional bank process for a business in distress. Contact IBank's small business finance programs team or a local FDC to start."
+},
+{
+  name: "Exempt Facility Bonds",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "Tax Exempt/Taxable Bonds",
+  eligibility: "Airports, spaceports, mass commuting facilities, high-speed intercity rail facilities and more",
+  total: "N/A",
+  max: "No Ceiling",
+  timing: "Ongoing",
+  email: "bondunit@ibank.ca.gov",
+  url: "https://ibank.ca.gov/bonds/exempt-facility-bonds/",
+  summary: "Conduit bond financing for federally defined exempt facilities, with no dollar ceiling. Covers transportation and utility-type infrastructure built or operated privately.",
+  detail: "Exempt facility bonds are a category of tax-exempt private activity bond authorized under federal tax law for specific infrastructure types: airports, docks and wharves, spaceports, mass commuting facilities, high-speed intercity rail, water furnishing, sewage and solid waste disposal facilities, and qualified highway and surface freight transfer facilities, among others. IBank issues them as a conduit, meaning the private borrower repays the debt and IBank bears no liability. There is no issuance ceiling under the program itself, though most categories draw on the state's federally limited private activity bond volume cap, which is allocated competitively. Application requires draft bond documents and a fee, and projects go through a TEFRA public hearing before the IBank board. Engage the bond unit early to confirm the project fits a federally defined exempt facility category."
+},
+{
+  name: "Expanding Venture Capital Access Program",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "Venture Capital Funding",
+  eligibility: "VC funds and businesses",
+  total: "$250,000,000",
+  max: "$5,000,000 to $10,000,000 per venture fund; $2,500,000 per early stage business",
+  timing: "Ongoing",
+  email: "vc@ibank.ca.gov",
+  url: "https://ibank.ca.gov/small-business/venture-capital-program/",
+  summary: "State capital deployed into venture funds and directly into early-stage companies. Fund commitments run $5 to $10 million; direct investments reach $2.5 million per business.",
+  detail: "Funded through California's federal State Small Business Credit Initiative allocation, this program is designed to widen the set of founders and regions that venture capital actually reaches. IBank invests as a limited partner in venture funds — generally emerging managers and funds with a demonstrated record of backing underserved founders and underserved parts of the state — and also makes direct co-investments into early-stage companies alongside those funds. SSBCI rules require private capital matching at least dollar for dollar, so state money is always accompanied by private investment rather than substituting for it. Fund managers apply through IBank's qualification process; companies generally come in through a partner fund rather than approaching IBank directly. Check the program's current application status before preparing materials."
+},
+{
+  name: "Farm Loans",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "State Loan",
+  eligibility: "Agriculture businesses",
+  total: "N/A",
+  max: "$1,825,000",
+  timing: "Ongoing",
+  email: "sbfc-programs@ibank.ca.gov",
+  url: "https://ibank.ca.gov/small-business/farm-loans/",
+  summary: "Financing of up to $1,825,000 for California agricultural businesses through IBank's Small Business Finance Center. Delivered via the state's Financial Development Corporation network.",
+  detail: "IBank's Farm Loan Program supports small and mid-sized agricultural operations that have trouble accessing conventional credit — a persistent issue for farms with seasonal cash flow, limited collateral outside the land itself, or a short operating history. Financing is arranged through the Financial Development Corporation network, which packages the request and works with participating lenders, and the program can support both guarantees and direct lending depending on the structure. Eligible uses generally cover equipment, operating capital, and other ordinary agricultural business needs. The ceiling of $1,825,000 is set by program rules. Growers should approach an FDC serving their region or contact IBank's small business finance programs team, which can make the referral."
+},
+{
+  name: "Industrial Development Bonds and Manufacturing Bonds",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "Tax Exempt/Taxable Bonds",
+  eligibility: "Businesses with qualifying projects",
+  total: "N/A",
+  max: "$10,000,000",
+  timing: "Ongoing",
+  email: "fariba.khoie@ibank.ca.gov",
+  url: "https://ibank.ca.gov/bonds/industrial-development-bonds/",
+  summary: "Tax-exempt bond financing of up to $10 million for manufacturing facilities and equipment. Lower interest cost than conventional debt for qualifying capital projects.",
+  detail: "Industrial development bonds, also called small issue manufacturing bonds, let a manufacturer finance land, buildings, and new equipment at tax-exempt rates. The $10 million ceiling comes from federal tax law, which also imposes a capital expenditure limit counting the borrower's spending in the same municipality over a six-year window, and restricts proceeds to core manufacturing and directly related ancillary facilities. IBank issues the bonds as a conduit, so the borrower's own credit — usually supported by a bank letter of credit or direct purchase — determines pricing and feasibility. Transactions need bond counsel, an underwriter or purchasing bank, and a TEFRA hearing before the IBank board, and they carry meaningful issuance costs, which is why they tend to make sense at the larger end of the range. Contact the bond unit to test eligibility before incurring transaction costs."
+},
+{
+  name: "Infrastructure State Revolving Fund Program (ISRF Loan Program)",
+  category: "Financing & Start Up Support",
+  body: "State: IBank",
+  type: "Direct Loans",
+  eligibility: "Local government (city, county, districts, water districts, etc.)",
+  total: "N/A",
+  max: "$65,000,000 maximum per loan",
+  timing: "Ongoing",
+  email: "infrastructure@ibank.ca.gov",
+  url: "https://ibank.ca.gov/loans/infrastructure-loans/",
+  summary: "Direct low-cost loans of up to $65 million to public agencies for infrastructure projects. Businesses benefit indirectly when a local agency uses it to build the infrastructure a site needs.",
+  detail: "ISRF is IBank's direct lending program for public borrowers: cities, counties, special districts, water and sanitation districts, joint powers authorities, and in some cases universities and hospitals. It finances a wide range of public infrastructure — streets and highways, water and wastewater systems, drainage, port and airport facilities, public buildings, parks, power and communications facilities, and environmental mitigation among them — at rates below what many agencies could obtain independently. For a business, the relevance is site-related: when a project needs a road extension, a sewer upgrade, or a water main to be developable, ISRF is often how the responsible agency pays for it. Loan terms run up to the useful life of the asset, and applications are accepted on a rolling basis with board approval required."
+},
+{
+  name: "Recycling Market Development Zone (RMDZ) Loan Program",
+  category: "Financing & Start Up Support",
+  body: "State: CalRecycle",
+  type: "Loan",
+  eligibility: "California based recycling businesses",
+  total: "Varies",
+  max: "Varies",
+  timing: "Ongoing",
+  email: "loans@calrecycle.ca.gov",
+  url: "https://calrecycle.ca.gov/rmdz/loans/",
+  summary: "Below-market loans for recycling manufacturers siting or expanding inside a designated Recycling Market Development Zone. Zone businesses also get technical assistance and free product marketing.",
+  detail: "The RMDZ program combines low-interest financing with a package of local support delivered through zone administrators across the state. Loans finance machinery, equipment, real estate, working capital, and ancillary costs for manufacturers that use California-generated waste material as feedstock, with interest running around four percent depending on the borrower's credit. Beyond the loan, zone businesses get help with permitting, site selection, feedstock sourcing, and marketing of recycled-content products through CalRecycle's manufacturer directory. Collateral and matching funds are required, and there is an application fee plus a closing fee. The zone footprint matters: benefits attach to businesses located within a designated zone, so confirm zone boundaries early. Zone administrators and CalRecycle's zone liaisons are the practical entry point."
+},
+{
+  name: "501(c)(3) Bonds",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "Tax Exempt/Taxable Bonds",
+  eligibility: "Businesses with qualifying projects excluding housing",
+  total: "N/A",
+  max: "No ceiling",
+  timing: "Ongoing",
+  email: "bondunit@ibank.ca.gov",
+  url: "https://ibank.ca.gov/bonds/501c3-bonds/",
+  summary: "Tax-exempt conduit bonds for nonprofit organizations, with no dollar ceiling. Nonprofits borrow at lower rates than they could obtain through a taxable bank loan.",
+  detail: "IBank issues 501(c)(3) bonds on behalf of qualifying nonprofit organizations — schools, museums, cultural institutions, healthcare and social service providers, and similar entities — to finance capital projects. Housing is excluded. The core benefit is interest cost: borrowers pay materially less than they would on taxable debt, and the structure allows long-term financing, flexible terms, and the ability to complete a project now and repay it from future revenue without liquidating endowment or accumulated funds. Up to two percent of proceeds can cover eligible costs of issuance such as underwriting, counsel, rating agency, and trustee fees. Unlike private activity bonds for for-profit borrowers, 501(c)(3) bonds do not draw on the state volume cap, and there is no ceiling on issuance size. Applications require draft bond documents and go before the IBank board following a TEFRA hearing."
+},
+{
+  name: "Small Business Loan Guarantee",
+  category: "Financing & Start Up Support",
+  body: "State: GO-Biz and IBank",
+  type: "Loan Guarantee",
+  eligibility: "Qualified small businesses",
+  total: "N/A",
+  max: "$5,000,000 maximum guarantee amount",
+  timing: "Ongoing",
+  email: "sbfc-programs@ibank.ca.gov",
+  url: "https://ibank.ca.gov/small-business/loan-guarantees/",
+  summary: "Guarantees up to $5 million of a loan to a small business that cannot get conventional financing on its own. The state's workhorse credit enhancement for small business lending.",
+  detail: "IBank's Small Business Finance Center guarantees a portion of a loan made by a participating lender, giving the lender the confidence to approve a borrower who would otherwise be declined for insufficient collateral, a short operating history, or an industry the bank considers risky. Guarantees reach $5 million and typically cover a substantial share of the loan, for terms up to seven years. Eligible uses are broad — working capital, equipment, inventory, expansion, real estate, and in some cases refinancing. Intake usually runs through California's Financial Development Corporations, which package the request, match it with a lender, and administer the guarantee; a business can also start with its existing bank if that bank participates. This is generally the first IBank product to look at for a small business that has been turned down for conventional credit."
+},
+{
+  name: "State Small Business Credit Initiative (SSBCI)",
+  category: "Financing & Start Up Support",
+  body: "State: STO-CPCFA",
+  type: "Federal Funding Supporting Credit Enhancement and Loan Participation Programs",
+  eligibility: "Financing provided through participating lenders to eligible California small businesses and non-profits; eligibility, financing limits, and permitted uses vary by the specific CPCFA program",
+  total: "N/A",
+  max: "Assistance and financing limits vary by program. See the individual CalCAP for Small Business, CalCAP Collateral Support, and CalCAP Loan Participation program information",
+  timing: "Ongoing",
+  email: "ssbci@treasurer.ca.gov",
+  url: "https://www.treasurer.ca.gov/cpcfa/calcap/sb/ssbci",
+  summary: "The federal funding source behind several of California's small business credit programs. You do not apply to SSBCI directly — you apply to the CalCAP or IBank program it capitalizes.",
+  detail: "The American Rescue Plan Act reauthorized the State Small Business Credit Initiative in 2021 and allocated roughly $1.2 billion to California. Rather than operating as a standalone program, those dollars capitalize existing state vehicles: CalCAP for Small Business, CalCAP Collateral Support, and CalCAP Loan Participation at the Treasurer's Office, plus IBank's loan guarantee and venture capital programs. Federal rules attach — including a requirement that every state dollar be matched at least dollar for dollar by private capital, targets for lending to businesses in underserved communities, and reporting obligations on lenders — but from a borrower's perspective the application experience is that of the underlying program. The practical takeaway is to identify which credit product fits the need and apply there; understanding that SSBCI funds it mainly explains why certain eligibility and reporting requirements exist."
+},
+
+/* ---------- POWER & UTILITIES ---------- */
+{
+  name: "San Diego Gas & Electric (SDG&E) Economic Development Rate Program",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Utility Rate Discount",
+  eligibility: "Businesses in SDG&E territory",
+  total: "Varies based on remaining power allocation",
+  max: "12% discount up to five years",
+  timing: "Ongoing",
+  email: "edr@sdge.com",
+  url: "https://www.sdge.com/edr",
+  summary: "A 12 percent discount on electricity for up to five years for qualifying businesses in SDG&E territory. Aimed at companies deciding whether to locate, expand, or stay in California.",
+  detail: "The Economic Development Rate is a CPUC-authorized tariff that lets an investor-owned utility discount electricity for customers whose California operations are genuinely at risk of locating or relocating out of state, or who are making a new investment that would otherwise go elsewhere. Qualification turns on demonstrating that competitive alternative — the discount is not available simply for being a large customer. Applicants typically must meet a minimum load threshold, commit to maintaining employment and operations in the service territory for the discount period, and certify the out-of-state alternative. The discount runs for up to five years and then steps off. Program capacity is capped by remaining power allocation, so availability changes over time. GO-Biz Business Investment Services processes utility Economic Development Rate requests and can help assemble the case."
+},
+{
+  name: "Southern California Edison (SCE) Economic Development Rate",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Utility Rate Discount",
+  eligibility: "Businesses in SCE territory",
+  total: "Varies based on remaining power allocation",
+  max: "12% discount over five years",
+  timing: "Ongoing",
+  email: "economicdevelopment@sce.com",
+  url: "https://www.sce.com/sites/default/files/custom-files/PDF_Files/EDR_Fact_Sheet_2025.pdf",
+  summary: "A 12 percent electricity discount over five years for qualifying businesses in SCE territory. Requires demonstrating a credible out-of-state alternative.",
+  detail: "SCE's Economic Development Rate follows the same CPUC framework as the other investor-owned utilities: a discount on electric service for customers who can show that their California load is at risk, either because an existing operation is considering relocation or because a new or expanded facility is being competed against a site in another state. Applicants generally must meet a minimum demand threshold, commit to retaining or adding a specified level of employment and load in the territory, and provide documentation supporting the competitive alternative. The discount applies over a five-year term with conditions on maintaining operations, and clawback provisions apply if commitments are not met. Because the program's capacity is limited by remaining allocation, timing matters. GO-Biz Business Investment Services handles EDR requests and can coordinate with SCE."
+},
+{
+  name: "Pacific Gas & Electric (PG&E) Economic Development Rate",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Utility Rate Discount",
+  eligibility: "Businesses in PG&E territory",
+  total: "Varies based on remaining power allocation",
+  max: "12% to 20% discount over five years",
+  timing: "Ongoing",
+  email: "economicdevelopment@pge.com",
+  url: "https://www.pge.com/assets/pge/docs/business-resources/economic-development/ed-fact-sheet.pdf",
+  summary: "An electricity discount of 12 to 20 percent over five years in PG&E territory. The higher tier is available for qualifying locations in economically distressed areas.",
+  detail: "PG&E's Economic Development Rate offers the widest discount band of the three investor-owned utility programs, with the upper end generally reserved for businesses locating or expanding in designated economically distressed areas. As with SCE and SDG&E, the core qualification is a demonstrable competitive alternative outside California, supported by documentation, plus commitments on load and employment over the discount term. Minimum demand thresholds apply, and the discount steps down or terminates if the customer fails to maintain the committed operations. Available capacity depends on the remaining power allocation authorized by the CPUC, so the program can effectively close when fully subscribed. GO-Biz Business Investment Services processes Economic Development Rate requests statewide and is the recommended starting point for a company evaluating a PG&E territory site."
+},
+{
+  name: "Self Generation Incentive Program (SGIP) – LADWP",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Energy Storage System Rebate",
+  eligibility: "Non-residential customers",
+  total: "Varies based on LADWP",
+  max: "$150 – $2,000 per kilowatt hour rebate rate",
+  timing: "Ongoing",
+  email: "sgip@ladwp.com",
+  url: "https://www.cpuc.ca.gov/sgip",
+  summary: "Rebates for behind-the-meter energy storage at commercial sites, administered for the LADWP territory. Rebate rates run from $150 to $2,000 per kilowatt hour depending on the customer category.",
+  detail: "The Self Generation Incentive Program pays rebates on installed distributed energy resources, with energy storage now the dominant category. Incentive levels are tiered: the general market rate sits at the low end of the range, while much higher rates are reserved for equity and resiliency categories — customers in low-income or disadvantaged communities, and customers in high fire threat districts or subject to repeated public safety power shutoffs. For a commercial customer, storage economics typically combine the SGIP rebate with demand charge reduction and backup resilience value. Reservations are made through the program administrator before equipment is installed, and there are performance and metering obligations after the system is energized. Confirm current budget availability and step levels before committing, since incentive rates decline as budget tiers are claimed."
+},
+{
+  name: "Self Generation Incentive Program (SGIP) – PG&E",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Energy Storage System Rebate",
+  eligibility: "Non-residential customers",
+  total: "Varies based on PG&E",
+  max: "$150 – $2,000 per kilowatt hour rebate rate",
+  timing: "Ongoing",
+  email: "selfgen@pge.com",
+  url: "https://www.cpuc.ca.gov/sgip",
+  summary: "Energy storage rebates for non-residential PG&E customers, from $150 to $2,000 per kilowatt hour. Higher rates apply to equity and wildfire resiliency categories.",
+  detail: "PG&E administers SGIP for its own territory under CPUC rules shared across the program administrators. Commercial and industrial customers installing behind-the-meter storage reserve an incentive before installation, based on the rated energy capacity of the system and the category they qualify for. Given PG&E's exposure to public safety power shutoffs and high fire threat districts, a large share of the higher resiliency incentives in the state have flowed through this territory — businesses in those areas should check their eligibility carefully, since the difference between the general market rate and the resiliency rate is substantial. Systems must meet performance, metering, and operational requirements, including minimum annual discharge, and incentives are paid partly upfront and partly based on measured performance."
+},
+{
+  name: "Self Generation Incentive Program (SGIP) – SDG&E",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Energy Storage System Rebate",
+  eligibility: "Non-residential customers",
+  total: "Varies based on SDG&E",
+  max: "$150 – $2,000 per kilowatt hour rebate rate",
+  timing: "Ongoing",
+  email: "sgip@energycenter.org",
+  url: "https://www.cpuc.ca.gov/sgip",
+  summary: "Storage rebates for non-residential customers in SDG&E territory, administered by the Center for Sustainable Energy. Rates range from $150 to $2,000 per kilowatt hour.",
+  detail: "In SDG&E territory the program is administered by the Center for Sustainable Energy rather than the utility itself, though eligibility and incentive structure follow the same statewide CPUC rules. Non-residential customers reserve an incentive before installing behind-the-meter storage, with the rate determined by system size and by whether the customer qualifies for general market, equity, or resiliency treatment. For most commercial customers the business case combines the rebate with savings on demand charges and time-of-use arbitrage, plus backup power value. Applications require documentation of the site, the equipment, and the customer's category, and post-installation performance requirements apply. Budget is allocated in steps that decline as they are claimed, so confirm the current step and remaining budget before finalizing a project."
+},
+{
+  name: "Self Generation Incentive Program (SGIP) – SCE",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Energy Storage System Rebate",
+  eligibility: "Non-residential customers",
+  total: "Varies based on SCE",
+  max: "$150 – $2,000 per kilowatt hour rebate rate",
+  timing: "Ongoing",
+  email: "sgipgroup@sce.com",
+  url: "https://www.cpuc.ca.gov/sgip",
+  summary: "Energy storage rebates for non-residential SCE customers under the statewide SGIP framework. Incentive rates run from $150 to $2,000 per kilowatt hour.",
+  detail: "SCE administers SGIP for its service territory, following the incentive tiers and eligibility rules set by the CPUC. Commercial, industrial, agricultural, and institutional customers installing behind-the-meter storage apply for a reservation before installation; the incentive is calculated on rated energy capacity and varies sharply depending on whether the project falls in the general market category or qualifies for equity or resiliency treatment. Customers in high fire threat districts or with a history of public safety power shutoffs should test resiliency eligibility first, since it can change the economics of a project entirely. Metering, performance, and minimum discharge requirements apply after energization, and part of the incentive is typically tied to measured operation rather than paid entirely upfront."
+},
+{
+  name: "Self Generation Incentive Program (SGIP) – SoCalGas",
+  category: "Power & Utilities",
+  body: "State: CPUC",
+  type: "Energy Storage System Rebate",
+  eligibility: "Non-residential customers",
+  total: "Varies based on SoCalGas",
+  max: "$150 – $2,000 per kilowatt hour rebate rate",
+  timing: "Ongoing",
+  email: "selfgeneration@socalgas.com",
+  url: "https://www.cpuc.ca.gov/sgip",
+  summary: "SoCalGas administers SGIP for its territory, covering storage and other qualifying distributed generation. Rates run from $150 to $2,000 per kilowatt hour.",
+  detail: "SoCalGas is one of the four SGIP program administrators, and its role is significant for the generation technologies the program still supports alongside storage — fuel cells, combined heat and power, microturbines, and similar equipment where a gas utility is the natural point of contact. Non-residential customers reserve incentives before installation, with amounts set by capacity and category under the same statewide CPUC rules that govern the other administrators. For customers evaluating on-site generation rather than storage alone, SoCalGas is generally the right place to start, and staff can advise on how generation and storage incentives interact. Post-installation metering and performance obligations apply, and budget is allocated in declining steps."
+}
+];
+
+
+/* ==== setup ==== */
+const CAT_COLOR = {
+  "Business Development & Business Support":"var(--c-biz)",
+  "Employment & Workforce":"var(--c-emp)",
+  "Equipment & Machinery":"var(--c-equ)",
+  "Financing & Start Up Support":"var(--c-fin)",
+  "Power & Utilities":"var(--c-pow)"
+};
+const CAT_ORDER = Object.keys(CAT_COLOR);
+
+INCENTIVES.forEach((it,i)=>{ it.id = "p"+i; });
+
+const picked = new Set();
+let lastFocus = null;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ==== filter options ==== */
+function fill(sel, label, values){
+  sel.innerHTML = '<option value="">'+label+'</option>' +
+    values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+}
+const uniq = key => [...new Set(INCENTIVES.map(i=>i[key]))].sort((a,b)=>a.localeCompare(b));
+
+fill($("#fCat"),"All categories", CAT_ORDER.filter(c=>INCENTIVES.some(i=>i.category===c)));
+fill($("#fBody"),"All agencies", uniq("body"));
+fill($("#fType"),"All types", uniq("type"));
+
+$("#mastMeta").textContent =
+  INCENTIVES.length + " programs from " + uniq("body").length +
+  " administering bodies, across " + CAT_ORDER.length + " categories.";
+
+/* ==== rendering ==== */
+function specRows(it, keys){
+  return keys.map(([dt,dd,raw]) =>
+    '<div class="spec"><dt>'+esc(dt)+'</dt><dd>'+(raw||esc(dd||"—"))+'</dd></div>').join("");
+}
+
+/* contact is an email address, or a link to the agency's contact page */
+function contactCell(it){
+  if(it.contactUrl)
+    return '<a href="'+esc(it.contactUrl)+'" target="_blank" rel="noopener">'+esc(it.email)+'</a>';
+  if(/@/.test(it.email))
+    return '<a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>';
+  return esc(it.email);
+}
+
+function cardHTML(it){
+  const on = picked.has(it.id);
+  return '<article class="card'+(on?" picked":"")+'" style="--spine:'+CAT_COLOR[it.category]+'" ' +
+    'data-id="'+it.id+'" tabindex="0" role="button" aria-label="Open details for '+esc(it.name)+'">' +
+      '<div class="card-cat">'+esc(it.category)+'</div>' +
+      '<h2>'+esc(it.name)+'</h2>' +
+      '<p class="card-summary">'+esc(it.summary)+'</p>' +
+      '<dl class="specs">' + specRows(it,[
+        ["Administering body", it.body],
+        ["Type", it.type],
+        ["Total available", it.total],
+        ["Maximum award", it.max],
+        ["Timing", it.timing]
+      ]) + '</dl>' +
+      '<div class="card-actions">' +
+        '<a class="btn btn-line" href="'+esc(it.url)+'" target="_blank" rel="noopener" data-stop>Learn more</a>' +
+        '<button class="btn btn-pick'+(on?" on":"")+'" data-pick="'+it.id+'" data-stop>' +
+          (on?"In your list":"Add to list") + '</button>' +
+        '<span class="expand-hint">Open details</span>' +
+      '</div>' +
+    '</article>';
+}
+
+function currentFilters(){
+  return {
+    q: $("#q").value.trim().toLowerCase(),
+    cat: $("#fCat").value,
+    body: $("#fBody").value,
+    type: $("#fType").value
+  };
+}
+
+function matches(it,f){
+  if(f.cat && it.category!==f.cat) return false;
+  if(f.body && it.body!==f.body) return false;
+  if(f.type && it.type!==f.type) return false;
+  if(f.q){
+    const hay = (it.name+" "+it.body+" "+it.type+" "+it.category+" "+
+                 it.eligibility+" "+it.summary+" "+it.detail).toLowerCase();
+    if(!f.q.split(/\s+/).every(t=>hay.includes(t))) return false;
+  }
+  return true;
+}
+
+function render(){
+  const f = currentFilters();
+  const rows = INCENTIVES.filter(it=>matches(it,f));
+  const active = !!(f.q||f.cat||f.body||f.type);
+
+  $("#grid").innerHTML = rows.length
+    ? rows.map(cardHTML).join("")
+    : '<div class="empty"><strong>No programs match those filters.</strong>' +
+      '<p>Try removing one filter, or search a broader term such as “loan”, “tax credit”, or “grant”.</p>' +
+      '<button class="btn btn-line" data-clear>Clear filters</button></div>';
+
+  $("#resultCount").textContent = rows.length===INCENTIVES.length
+    ? "Showing all "+INCENTIVES.length+" programs"
+    : "Showing "+rows.length+" of "+INCENTIVES.length+" programs";
+
+  $("#clearBtn").disabled = !active;
+}
+
+function syncBasket(){
+  const n = picked.size;
+  $("#basketCount").innerHTML = n===0
+    ? "Your list is empty"
+    : "<b>"+n+"</b> program"+(n===1?"":"s")+" on your list";
+  $("#viewListBtn").disabled = n===0;
+  $("#downloadBtn").disabled = n===0;
+}
+
+function togglePick(id){
+  picked.has(id) ? picked.delete(id) : picked.add(id);
+  syncBasket();
+
+  document.querySelectorAll('[data-pick="'+id+'"]').forEach(b=>{
+    const on = picked.has(id);
+    b.classList.toggle("on",on);
+    b.textContent = b.dataset.detail ? (on?"Remove from list":"Add to list") : (on?"In your list":"Add to list");
+  });
+  const card = document.querySelector('.card[data-id="'+id+'"]');
+  if(card) card.classList.toggle("picked",picked.has(id));
+  if($("#listScrim").classList.contains("open")) renderList();
+}
+
+/* ==== detail ==== */
+function openDetail(id){
+  const it = INCENTIVES.find(x=>x.id===id);
+  if(!it) return;
+  lastFocus = document.activeElement;
+
+  $("#detailCat").textContent = it.category;
+  $("#detailCat").style.color = CAT_COLOR[it.category];
+  $("#detailTitle").textContent = it.name;
+  $("#detailProse").textContent = it.detail;
+  $("#detailSpecs").innerHTML = specRows(it,[
+    ["Administering body", it.body],
+    ["Type", it.type],
+    ["Eligibility", it.eligibility],
+    ["Total amount available", it.total],
+    ["Maximum award", it.max],
+    ["Timing", it.timing],
+    ["Contact", it.email, contactCell(it)]
+  ]);
+  $("#detailLink").href = it.url;
+
+  /* nine programs list a contact page instead of an address */
+  const interest = $("#detailInterest");
+  if(/@/.test(it.email)){
+    interest.href = interestMailto(it);
+    interest.textContent = "Express interest";
+    interest.removeAttribute("target");
+  } else {
+    interest.href = it.contactUrl || it.url;
+    interest.textContent = "Contact the agency";
+    interest.setAttribute("target","_blank");
+    interest.setAttribute("rel","noopener");
+  }
+
+  const pick = $("#detailPick");
+  pick.dataset.pick = it.id;
+  pick.dataset.detail = "1";
+  pick.classList.toggle("on",picked.has(it.id));
+  pick.textContent = picked.has(it.id) ? "Remove from list" : "Add to list";
+
+  show($("#detailScrim"));
+  $("#detailClose").focus();
+}
+
+/* Opens a pre-filled draft in whatever mail client the person uses. */
+function interestMailto(it){
+  const subject = "Interest in " + it.name;
+  const body = [
+    "Hello,",
+    "",
+    "I'm writing about " + it.name + ", and I'd like to learn more.",
+    "",
+    "Could you tell me more about eligibility, whether funding is currently available, and how to apply? I'd also welcome a pointer to the right next step or contact.",
+    "",
+    "A little about us:",
+    "  Business / organization: ",
+    "  What we're planning: ",
+    "  California location: ",
+    "",
+    "Thank you,",
+    ""
+  ].join("\r\n");
+  return "mailto:" + encodeURIComponent(it.email) +
+         "?subject=" + encodeURIComponent(subject) +
+         "&body="    + encodeURIComponent(body);
+}
+
+function show(el){ el.classList.add("open"); document.body.style.overflow="hidden"; }
+function hide(el){
+  el.classList.remove("open");
+  if(!document.querySelector(".scrim.open")) document.body.style.overflow="";
+  if(lastFocus){ try{ lastFocus.focus(); }catch(e){} lastFocus=null; }
+}
+
+/* ==== shortlist ==== */
+function pickedItems(){
+  return INCENTIVES.filter(it=>picked.has(it.id))
+    .sort((a,b)=>CAT_ORDER.indexOf(a.category)-CAT_ORDER.indexOf(b.category) || a.name.localeCompare(b.name));
+}
+
+function renderList(){
+  const items = pickedItems();
+  $("#pickedList").innerHTML = items.map(it =>
+    '<li class="picked-item">' +
+      '<div class="picked-main">' +
+        '<span class="nm">'+esc(it.name)+'</span>' +
+        '<span class="sub">'+esc(it.body)+' &nbsp;|&nbsp; '+esc(it.type)+'</span>' +
+      '</div>' +
+      '<button class="drop" data-pick="'+it.id+'">Remove</button>' +
+    '</li>').join("");
+
+  $("#listNote").textContent = items.length
+    ? "Download produces a plain-text PDF summary of these " + items.length +
+      " program" + (items.length===1?"":"s") + ", grouped by category and ready to forward."
+    : "Nothing selected yet.";
+
+  $("#listDownload").disabled = !items.length;
+  $("#listClear").disabled = !items.length;
+}
+
+function openList(){
+  lastFocus = document.activeElement;
+  renderList();
+  show($("#listScrim"));
+  $("#listClose").focus();
+}
+
+/* ==== export ==== */
+function exportText(items){
+  const stamp = new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  const lines = [
+    "CALIFORNIA BUSINESS INCENTIVES — SELECTED PROGRAMS",
+    items.length+" program"+(items.length===1?"":"s")+" selected. Prepared "+stamp+".",
+    "Source: California Business Investment Guide (GO-Biz, September 2026).",
+    ""
+  ];
+  let cat = null;
+  items.forEach(it=>{
+    if(it.category!==cat){ lines.push("","== "+it.category+" ==",""); cat = it.category; }
+    lines.push(
+      it.name,
+      "  Agency:           "+it.body,
+      "  Type:             "+it.type,
+      "  Total available:  "+it.total,
+      "  Maximum award:    "+it.max,
+      "  Timing:           "+it.timing,
+      "  Eligibility:      "+it.eligibility,
+      "  Contact:          "+(it.contactUrl || it.email),
+      "",
+      "  "+it.summary,
+      "  "+it.url,
+      ""
+    );
+  });
+  const blob = new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "california-business-incentives.txt";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },400);
+
+  const note = $("#listNote");
+  if(note) note.textContent = "The PDF library did not load, so your list downloaded as a text file instead. Reload the page on a connected network to get the PDF.";
+}
+
+/* ==== PDF export ==== */
+function exportPDF(){
+  const items = pickedItems();
+  if(!items.length) return;
+
+  if(!window.jspdf || !window.jspdf.jsPDF){ exportText(items); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt",format:"letter"});
+
+  const L=62, R=62, TOP=64;
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const CW = W-L-R;
+  let y = TOP;
+
+  const room = need => { if(y+need > H-62){ doc.addPage(); y = TOP; return true; } return false; };
+
+  const write = (text,{size=10,style="normal",color=[26,42,50],lead=14,gap=0,indent=0}={}) => {
+    doc.setFont("helvetica",style); doc.setFontSize(size); doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(String(text), CW-indent);
+    lines.forEach(ln=>{ room(lead); doc.text(ln, L+indent, y); y += lead; });
+    y += gap;
+  };
+
+  const rule = (gapBefore=8,gapAfter=12,shade=205) => {
+    room(gapBefore+2); y += gapBefore;
+    doc.setDrawColor(shade); doc.setLineWidth(.6); doc.line(L,y,W-R,y); y += gapAfter;
+  };
+
+  /* cover */
+  doc.setFont("helvetica","bold"); doc.setFontSize(19); doc.setTextColor(17,37,47);
+  doc.text("California Business Incentives", L, y); y += 24;
+  doc.text("Selected Programs", L, y); y += 20;
+
+  const stamp = new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  write(items.length+" program"+(items.length===1?"":"s")+" selected  ·  Prepared "+stamp,
+        {size:9.5,color:[95,112,120],lead:13,gap:4});
+  write("Source: California Business Investment Guide, Governor's Office of Business and Economic Development, September 2026. Figures and deadlines change; confirm with the administering agency before relying on them.",
+        {size:8.5,color:[122,136,143],lead:11.5,gap:2});
+  rule(10,20,175);
+
+  let lastCat = null;
+  items.forEach((it,idx)=>{
+    room(96);
+
+    if(it.category !== lastCat){
+      if(lastCat!==null) y += 6;
+      room(34);
+      write(it.category, {size:9.5,style:"bold",color:[95,112,120],lead:13,gap:6});
+      lastCat = it.category;
+    }
+
+    write(it.name, {size:12.5,style:"bold",color:[17,37,47],lead:16,gap:5});
+
+    const field = (label,val) => {
+      if(!val) return;
+      doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(95,112,120);
+      const lw = 104;
+      const lines = doc.splitTextToSize(String(val), CW-lw);
+      room(12.5*lines.length);
+      doc.text(label, L, y);
+      doc.setFont("helvetica","normal"); doc.setTextColor(30,48,57);
+      lines.forEach((ln,i)=>{ if(i>0) room(12.5); doc.text(ln, L+lw, y); y += 12.5; });
+    };
+
+    field("Agency", it.body);
+    field("Type", it.type);
+    field("Total available", it.total);
+    field("Maximum award", it.max);
+    field("Timing", it.timing);
+    field("Eligibility", it.eligibility);
+    field("Contact", it.contactUrl || it.email);
+
+    y += 6;
+    write(it.summary, {size:9.5,color:[38,56,64],lead:13.5,gap:4});
+
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(120,86,20);
+    const urlLines = doc.splitTextToSize(it.url, CW);
+    urlLines.forEach(ln=>{ room(11.5); doc.textWithLink(ln, L, y, {url:it.url}); y += 11.5; });
+
+    if(idx < items.length-1) rule(11,14,222);
+  });
+
+  /* page numbers */
+  const pages = doc.internal.getNumberOfPages();
+  for(let p=1;p<=pages;p++){
+    doc.setPage(p);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(140,152,158);
+    doc.text("California Business Incentives — Selected Programs", L, H-36);
+    doc.text(p+" / "+pages, W-R, H-36, {align:"right"});
+  }
+
+  doc.save("california-business-incentives.pdf");
+}
+
+/* ==== events ==== */
+document.addEventListener("click", e => {
+  const pickBtn = e.target.closest("[data-pick]");
+  if(pickBtn){ e.stopPropagation(); togglePick(pickBtn.dataset.pick); return; }
+
+  if(e.target.closest("[data-stop]")){ e.stopPropagation(); return; }
+
+  if(e.target.closest("[data-clear]")){ resetFilters(); return; }
+
+  const card = e.target.closest(".card");
+  if(card){ openDetail(card.dataset.id); return; }
+});
+
+document.addEventListener("keydown", e => {
+  if(e.key==="Escape"){
+    const open = document.querySelector(".scrim.open");
+    if(open) hide(open);
+    return;
+  }
+  if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("card")){
+    e.preventDefault(); openDetail(e.target.dataset.id);
+  }
+});
+
+[$("#fCat"),$("#fBody"),$("#fType")].forEach(s=>s.addEventListener("change",render));
+$("#q").addEventListener("input",render);
+
+function resetFilters(){
+  $("#q").value=""; $("#fCat").value=""; $("#fBody").value=""; $("#fType").value="";
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("#clearBtn").addEventListener("click",resetFilters);
+
+$("#detailClose").addEventListener("click",()=>hide($("#detailScrim")));
+$("#listClose").addEventListener("click",()=>hide($("#listScrim")));
+[$("#detailScrim"),$("#listScrim")].forEach(sc=>{
+  sc.addEventListener("click", e => { if(e.target===sc) hide(sc); });
+});
+
+$("#viewListBtn").addEventListener("click",openList);
+$("#downloadBtn").addEventListener("click",exportPDF);
+$("#listDownload").addEventListener("click",exportPDF);
+$("#listClear").addEventListener("click",()=>{
+  picked.clear(); syncBasket(); render(); renderList();
+});
+
+render();
+syncBasket();
+</script>
+</body>
+</html>

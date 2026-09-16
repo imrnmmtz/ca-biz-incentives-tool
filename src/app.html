@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>California Business Incentives Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#11252F;
+    --ink-soft:#1C3B49;
+    --paper:#E7ECEE;
+    --card:#FFFFFF;
+    --rule:#C9D3D8;
+    --rule-soft:#E2E8EA;
+    --muted:#55686F;
+    --brass:#8F6212;
+    --brass-lift:#F3EADA;
+
+    --c-biz:#1C5A6B;
+    --c-emp:#6E3A57;
+    --c-equ:#8F6212;
+    --c-fin:#2E6147;
+    --c-pow:#3C5A8F;
+
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.5;
+    font-variant-numeric:tabular-nums;
+  }
+  a{color:var(--ink)}
+  button{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:2px}
+
+  /* ---------- masthead ---------- */
+  .masthead{background:var(--ink);color:#EAF0F2}
+  .masthead-inner{max-width:1280px;margin:0 auto;padding:30px 24px 26px}
+  .masthead h1{
+    font-family:var(--serif);font-weight:500;letter-spacing:-.012em;
+    font-size:clamp(1.6rem,3.4vw,2.7rem);line-height:1.1;margin:0 0 12px;
+    text-wrap:balance;
+  }
+  .mast-lede{margin:0;color:#A8BEC6;font-size:.94rem;line-height:1.55}
+  .mast-meta{margin:0;color:#7E99A3;font-size:.8rem}
+
+  .mast-foot{
+    display:flex;flex-wrap:wrap;gap:16px 34px;
+    align-items:flex-end;justify-content:space-between;margin-top:20px;
+  }
+  .basket-block{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding-bottom:2px}
+  .basket-count{font-family:var(--serif);font-size:1.02rem;color:#EAF0F2}
+  .basket-count b{font-weight:600}
+  .basket-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  .btn{
+    border:1px solid transparent;border-radius:3px;padding:9px 15px;
+    text-decoration:none;display:inline-block;line-height:1.25;
+    font-size:.85rem;font-weight:500;cursor:pointer;background:none;
+    transition:background-color .12s ease,border-color .12s ease,color .12s ease;
+  }
+  .btn[disabled]{cursor:not-allowed;opacity:.42}
+  .btn-solid{background:#EAF0F2;color:var(--ink);border-color:#EAF0F2}
+  .btn-solid:hover:not([disabled]){background:#fff}
+  .btn-ghost-light{border-color:#3E5E6C;color:#C3D5DB}
+  .btn-ghost-light:hover:not([disabled]){border-color:#7E99A3;color:#EAF0F2}
+
+  /* ---------- controls ---------- */
+  .controls{
+    position:sticky;top:0;z-index:40;
+    background:rgba(231,236,238,.94);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--rule);
+  }
+  .controls-inner{max-width:1280px;margin:0 auto;padding:14px 24px}
+  .control-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:.71rem;color:var(--muted);letter-spacing:.005em}
+  .field select,.search input{
+    font-family:inherit;font-size:.86rem;color:var(--ink);height:37px;
+    background:var(--card);border:1px solid var(--rule);border-radius:3px;
+    padding:8px 10px;min-width:170px;
+  }
+  .field select{
+    appearance:none;padding-right:28px;min-width:158px;max-width:230px;
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2355686F' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;
+  }
+  .search{flex:1 1 260px;min-width:190px;max-width:400px}
+  .search input{width:100%}
+  .search input::placeholder{color:#8A9CA3}
+
+  .status-row{
+    display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;
+    margin-top:11px;font-size:.83rem;color:var(--muted);
+  }
+  .status-row .count{color:var(--ink);font-weight:500}
+  .linkish{
+    background:none;border:0;padding:0;cursor:pointer;
+    color:var(--brass);font-size:.83rem;text-decoration:underline;text-underline-offset:2px;
+  }
+  .linkish[disabled]{color:var(--muted);text-decoration:none;cursor:default}
+
+  /* ---------- results ---------- */
+  main{max-width:1280px;margin:0 auto;padding:26px 24px 72px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+
+  .card{
+    position:relative;background:var(--card);
+    border:1px solid var(--rule);border-radius:3px;
+    padding:18px 18px 14px 22px;
+    display:flex;flex-direction:column;
+    cursor:pointer;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:-1px;bottom:-1px;width:5px;
+    background:var(--spine);border-radius:3px 0 0 3px;
+  }
+  .card:hover{border-color:#A9B8BF}
+  .card.picked{border-color:var(--brass);background:#FDFBF7}
+
+  .card-cat{font-size:.71rem;color:var(--spine);font-weight:500;margin-bottom:6px}
+  .card h2{
+    font-family:var(--serif);font-weight:600;letter-spacing:-.005em;
+    font-size:1.09rem;line-height:1.24;margin:0 0 8px;
+  }
+  .card-summary{margin:0 0 14px;font-size:.855rem;line-height:1.55;color:#33474F}
+
+  .specs{border-top:1px solid var(--rule-soft);margin-bottom:14px}
+  .spec{display:grid;grid-template-columns:8.6em 1fr;gap:10px;padding:6px 0;border-bottom:1px solid var(--rule-soft)}
+  .spec dt{font-size:.735rem;color:var(--muted);line-height:1.4}
+  .spec dd{margin:0;font-size:.79rem;line-height:1.42}
+
+  .card-actions{margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn-line{border-color:var(--rule);color:var(--ink);background:var(--card)}
+  .btn-line:hover{border-color:var(--ink);background:#F6F9FA}
+  .btn-pick{border-color:var(--rule);background:var(--card)}
+  .btn-pick:hover{border-color:var(--brass);color:var(--brass)}
+  .btn-pick.on{background:var(--brass-lift);border-color:var(--brass);color:var(--brass)}
+  .expand-hint{margin-left:auto;font-size:.74rem;color:#8A9CA3}
+
+  .empty{
+    grid-column:1/-1;background:var(--card);border:1px solid var(--rule);border-radius:3px;
+    padding:38px 26px;text-align:center;
+  }
+  .empty p{margin:0 0 14px;color:var(--muted);font-size:.9rem}
+  .empty strong{font-family:var(--serif);font-weight:600;font-size:1.05rem;color:var(--ink);display:block;margin-bottom:8px}
+
+  /* ---------- overlays ---------- */
+  .scrim{
+    position:fixed;inset:0;z-index:60;background:rgba(11,28,36,.5);
+    display:none;padding:22px;overflow-y:auto;
+  }
+  .scrim.open{display:flex;align-items:flex-start;justify-content:center}
+
+  .sheet{
+    background:var(--card);border-radius:4px;width:100%;
+    box-shadow:0 22px 60px rgba(9,24,31,.34);
+    margin:auto;
+  }
+  .sheet-detail{max-width:720px}
+  .sheet-list{max-width:620px}
+
+  .sheet-head{
+    position:relative;padding:24px 56px 20px 26px;
+    border-bottom:1px solid var(--rule);
+  }
+  .sheet-head .card-cat{margin-bottom:7px}
+  .sheet-head h2{
+    font-family:var(--serif);font-weight:600;letter-spacing:-.008em;
+    font-size:1.5rem;line-height:1.16;margin:0;
+  }
+  .closer{
+    position:absolute;top:18px;right:16px;width:32px;height:32px;
+    border:1px solid var(--rule);border-radius:3px;background:var(--card);
+    cursor:pointer;line-height:1;font-size:1.05rem;color:var(--muted);
+  }
+  .closer:hover{border-color:var(--ink);color:var(--ink)}
+
+  .sheet-body{padding:22px 26px 24px}
+  .sheet-body h3{
+    font-size:.78rem;font-weight:600;color:var(--muted);
+    margin:0 0 9px;letter-spacing:.005em;
+  }
+  .sheet-body h3+p{margin-top:0}
+  .sheet-prose{font-size:.925rem;line-height:1.66;margin:0 0 22px;max-width:66ch;color:#22383F}
+
+  .sheet-specs{border-top:1px solid var(--rule-soft);margin:0 0 22px}
+  .sheet-specs .spec{grid-template-columns:11em 1fr}
+  .sheet-specs dd{font-size:.855rem}
+  .sheet-specs dd a{color:var(--brass);text-decoration:underline;text-underline-offset:2px}
+
+  .sheet-foot{
+    padding:16px 26px 20px;border-top:1px solid var(--rule);
+    display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+  }
+  .btn-brass{background:var(--brass);border-color:var(--brass);color:#fff}
+  .btn-brass:hover:not([disabled]){background:#7A5310;border-color:#7A5310}
+
+  /* shortlist */
+  .picked-list{list-style:none;margin:0;padding:0}
+  .picked-item{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:13px 0;border-bottom:1px solid var(--rule-soft);
+  }
+  .picked-item:last-child{border-bottom:0}
+  .picked-main{flex:1;min-width:0}
+  .picked-main .nm{font-family:var(--serif);font-weight:600;font-size:1rem;line-height:1.25;display:block}
+  .picked-main .sub{font-size:.755rem;color:var(--muted);margin-top:3px;display:block}
+  .drop{
+    border:1px solid var(--rule);background:var(--card);border-radius:3px;
+    padding:4px 9px;font-size:.74rem;color:var(--muted);cursor:pointer;flex-shrink:0;
+  }
+  .drop:hover{border-color:#A8443A;color:#A8443A}
+
+  .note{font-size:.79rem;color:var(--muted);line-height:1.55;margin:0}
+
+  footer{
+    max-width:1280px;margin:0 auto;padding:0 24px 52px;
+    font-size:.775rem;color:var(--muted);line-height:1.6;
+  }
+  footer .foot-inner{border-top:1px solid var(--rule);padding-top:18px}
+  footer a{color:var(--brass)}
+
+  @media (max-width:640px){
+    .masthead-inner{padding:24px 18px 22px}
+    .controls-inner{padding:12px 18px}
+    main{padding:20px 18px 60px}
+    footer{padding:0 18px 44px}
+    .grid{grid-template-columns:1fr}
+    /* free the viewport for results; filters live at the top of the page */
+    .controls{position:static;backdrop-filter:none;background:var(--paper)}
+    .control-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .search{grid-column:1/-1;max-width:none}
+    .field select,.search input{min-width:0;max-width:none;width:100%}
+    .field:last-of-type{grid-column:1/-1}
+    .sheet-head{padding:20px 50px 18px 20px}
+    .sheet-body,.sheet-foot{padding-left:20px;padding-right:20px}
+    .spec{grid-template-columns:1fr;gap:1px}
+    .sheet-specs .spec{grid-template-columns:1fr}
+    .scrim{padding:0}
+    .sheet{border-radius:0;min-height:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <h1>California Business Incentives Tool</h1>
+    <p class="mast-lede">Every funding program in the state's Business Investment Guide, in one filterable place. Browse by category, agency, or incentive type, then build a shortlist you can hand to a client or a board.</p>
+    <div class="mast-foot">
+      <p class="mast-meta" id="mastMeta"></p>
+      <div class="basket-block">
+        <span class="basket-count" id="basketCount">Your list is empty</span>
+        <div class="basket-actions">
+          <button class="btn btn-ghost-light" id="viewListBtn" disabled>Review list</button>
+          <button class="btn btn-solid" id="downloadBtn" disabled>Download my list</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <div class="control-row">
+      <div class="field search">
+        <label for="q">Search</label>
+        <input id="q" type="search" placeholder="Program name, agency, or keyword" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="fCat">Category</label>
+        <select id="fCat"></select>
+      </div>
+      <div class="field">
+        <label for="fBody">Administering body</label>
+        <select id="fBody"></select>
+      </div>
+      <div class="field">
+        <label for="fType">Type</label>
+        <select id="fType"></select>
+      </div>
+    </div>
+    <div class="status-row">
+      <span class="count" id="resultCount"></span>
+      <button class="linkish" id="clearBtn" disabled>Clear filters</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    Program data and every "Learn more" link are taken directly from the California Business Investment Guide (GO-Biz, September 2026), including the guide's own embedded hyperlinks. Amounts, deadlines, and eligibility change frequently — confirm details with the administering agency before relying on them. The written summaries are added here to explain each program in plain terms and are not official agency language.
+    <br><br>
+    <a href="https://business.ca.gov/wp-content/uploads/CA-BIG-2026-SEPTEMBER-2026pdf.pdf" target="_blank" rel="noopener">Open the source guide (PDF)</a>
+  </div>
+</footer>
+
+<!-- detail -->
+<div class="scrim" id="detailScrim" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="sheet sheet-detail">
+    <div class="sheet-head">
+      <div class="card-cat" id="detailCat"></div>
+      <h2 id="detailTitle"></h2>
+      <button class="closer" id="detailClose" aria-label="Close">&#215;</button>
+    </div>
+    <div class="sheet-body">
+      <h3>What it is</h3>
+      <p class="sheet-prose" id="detailProse"></p>
+      <h3>Program details</h3>
+      <dl class="sheet-specs" id="detailSpecs"></dl>
+    </div>
+    <div class="sheet-foot">
+      <a class="btn btn-line" id="detailLink" target="_blank" rel="noopener">Learn more</a>
+      <a class="btn btn-brass" id="detailInterest"></a>
+      <button class="btn btn-pick" id="detailPick"></button>
+    </div>
+  </div>
+</div>
+
+<!-- shortlist -->
+<div class="scrim" id="listScrim" role="dialog" aria-modal="true" aria-labelledby="listTitle">
+  <div class="sheet sheet-list">
+    <div class="sheet-head">
+      <h2 id="listTitle">Your list</h2>
+      <button class="closer" id="listClose" aria-label="Close">&#215;</button>
+    </div>
+    <div class="sheet-body">
+      <ul class="picked-list" id="pickedList"></ul>
+      <p class="note" id="listNote"></p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-brass" id="listDownload">Download my list</button>
+      <button class="btn btn-line" id="listClear">Remove all</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==== DATA ==== */
+/*DATA*/
+
+/* ==== setup ==== */
+const CAT_COLOR = {
+  "Business Development & Business Support":"var(--c-biz)",
+  "Employment & Workforce":"var(--c-emp)",
+  "Equipment & Machinery":"var(--c-equ)",
+  "Financing & Start Up Support":"var(--c-fin)",
+  "Power & Utilities":"var(--c-pow)"
+};
+const CAT_ORDER = Object.keys(CAT_COLOR);
+
+INCENTIVES.forEach((it,i)=>{ it.id = "p"+i; });
+
+const picked = new Set();
+let lastFocus = null;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ==== filter options ==== */
+function fill(sel, label, values){
+  sel.innerHTML = '<option value="">'+label+'</option>' +
+    values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+}
+const uniq = key => [...new Set(INCENTIVES.map(i=>i[key]))].sort((a,b)=>a.localeCompare(b));
+
+fill($("#fCat"),"All categories", CAT_ORDER.filter(c=>INCENTIVES.some(i=>i.category===c)));
+fill($("#fBody"),"All agencies", uniq("body"));
+fill($("#fType"),"All types", uniq("type"));
+
+$("#mastMeta").textContent =
+  INCENTIVES.length + " programs from " + uniq("body").length +
+  " administering bodies, across " + CAT_ORDER.length + " categories.";
+
+/* ==== rendering ==== */
+function specRows(it, keys){
+  return keys.map(([dt,dd,raw]) =>
+    '<div class="spec"><dt>'+esc(dt)+'</dt><dd>'+(raw||esc(dd||"—"))+'</dd></div>').join("");
+}
+
+/* contact is an email address, or a link to the agency's contact page */
+function contactCell(it){
+  if(it.contactUrl)
+    return '<a href="'+esc(it.contactUrl)+'" target="_blank" rel="noopener">'+esc(it.email)+'</a>';
+  if(/@/.test(it.email))
+    return '<a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>';
+  return esc(it.email);
+}
+
+function cardHTML(it){
+  const on = picked.has(it.id);
+  return '<article class="card'+(on?" picked":"")+'" style="--spine:'+CAT_COLOR[it.category]+'" ' +
+    'data-id="'+it.id+'" tabindex="0" role="button" aria-label="Open details for '+esc(it.name)+'">' +
+      '<div class="card-cat">'+esc(it.category)+'</div>' +
+      '<h2>'+esc(it.name)+'</h2>' +
+      '<p class="card-summary">'+esc(it.summary)+'</p>' +
+      '<dl class="specs">' + specRows(it,[
+        ["Administering body", it.body],
+        ["Type", it.type],
+        ["Total available", it.total],
+        ["Maximum award", it.max],
+        ["Timing", it.timing]
+      ]) + '</dl>' +
+      '<div class="card-actions">' +
+        '<a class="btn btn-line" href="'+esc(it.url)+'" target="_blank" rel="noopener" data-stop>Learn more</a>' +
+        '<button class="btn btn-pick'+(on?" on":"")+'" data-pick="'+it.id+'" data-stop>' +
+          (on?"In your list":"Add to list") + '</button>' +
+        '<span class="expand-hint">Open details</span>' +
+      '</div>' +
+    '</article>';
+}
+
+function currentFilters(){
+  return {
+    q: $("#q").value.trim().toLowerCase(),
+    cat: $("#fCat").value,
+    body: $("#fBody").value,
+    type: $("#fType").value
+  };
+}
+
+function matches(it,f){
+  if(f.cat && it.category!==f.cat) return false;
+  if(f.body && it.body!==f.body) return false;
+  if(f.type && it.type!==f.type) return false;
+  if(f.q){
+    const hay = (it.name+" "+it.body+" "+it.type+" "+it.category+" "+
+                 it.eligibility+" "+it.summary+" "+it.detail).toLowerCase();
+    if(!f.q.split(/\s+/).every(t=>hay.includes(t))) return false;
+  }
+  return true;
+}
+
+function render(){
+  const f = currentFilters();
+  const rows = INCENTIVES.filter(it=>matches(it,f));
+  const active = !!(f.q||f.cat||f.body||f.type);
+
+  $("#grid").innerHTML = rows.length
+    ? rows.map(cardHTML).join("")
+    : '<div class="empty"><strong>No programs match those filters.</strong>' +
+      '<p>Try removing one filter, or search a broader term such as “loan”, “tax credit”, or “grant”.</p>' +
+      '<button class="btn btn-line" data-clear>Clear filters</button></div>';
+
+  $("#resultCount").textContent = rows.length===INCENTIVES.length
+    ? "Showing all "+INCENTIVES.length+" programs"
+    : "Showing "+rows.length+" of "+INCENTIVES.length+" programs";
+
+  $("#clearBtn").disabled = !active;
+}
+
+function syncBasket(){
+  const n = picked.size;
+  $("#basketCount").innerHTML = n===0
+    ? "Your list is empty"
+    : "<b>"+n+"</b> program"+(n===1?"":"s")+" on your list";
+  $("#viewListBtn").disabled = n===0;
+  $("#downloadBtn").disabled = n===0;
+}
+
+function togglePick(id){
+  picked.has(id) ? picked.delete(id) : picked.add(id);
+  syncBasket();
+
+  document.querySelectorAll('[data-pick="'+id+'"]').forEach(b=>{
+    const on = picked.has(id);
+    b.classList.toggle("on",on);
+    b.textContent = b.dataset.detail ? (on?"Remove from list":"Add to list") : (on?"In your list":"Add to list");
+  });
+  const card = document.querySelector('.card[data-id="'+id+'"]');
+  if(card) card.classList.toggle("picked",picked.has(id));
+  if($("#listScrim").classList.contains("open")) renderList();
+}
+
+/* ==== detail ==== */
+function openDetail(id){
+  const it = INCENTIVES.find(x=>x.id===id);
+  if(!it) return;
+  lastFocus = document.activeElement;
+
+  $("#detailCat").textContent = it.category;
+  $("#detailCat").style.color = CAT_COLOR[it.category];
+  $("#detailTitle").textContent = it.name;
+  $("#detailProse").textContent = it.detail;
+  $("#detailSpecs").innerHTML = specRows(it,[
+    ["Administering body", it.body],
+    ["Type", it.type],
+    ["Eligibility", it.eligibility],
+    ["Total amount available", it.total],
+    ["Maximum award", it.max],
+    ["Timing", it.timing],
+    ["Contact", it.email, contactCell(it)]
+  ]);
+  $("#detailLink").href = it.url;
+
+  /* nine programs list a contact page instead of an address */
+  const interest = $("#detailInterest");
+  if(/@/.test(it.email)){
+    interest.href = interestMailto(it);
+    interest.textContent = "Express interest";
+    interest.removeAttribute("target");
+  } else {
+    interest.href = it.contactUrl || it.url;
+    interest.textContent = "Contact the agency";
+    interest.setAttribute("target","_blank");
+    interest.setAttribute("rel","noopener");
+  }
+
+  const pick = $("#detailPick");
+  pick.dataset.pick = it.id;
+  pick.dataset.detail = "1";
+  pick.classList.toggle("on",picked.has(it.id));
+  pick.textContent = picked.has(it.id) ? "Remove from list" : "Add to list";
+
+  show($("#detailScrim"));
+  $("#detailClose").focus();
+}
+
+/* Opens a pre-filled draft in whatever mail client the person uses. */
+function interestMailto(it){
+  const subject = "Interest in " + it.name;
+  const body = [
+    "Hello,",
+    "",
+    "I'm writing about " + it.name + ", and I'd like to learn more.",
+    "",
+    "Could you tell me more about eligibility, whether funding is currently available, and how to apply? I'd also welcome a pointer to the right next step or contact.",
+    "",
+    "A little about us:",
+    "  Business / organization: ",
+    "  What we're planning: ",
+    "  California location: ",
+    "",
+    "Thank you,",
+    ""
+  ].join("\r\n");
+  return "mailto:" + encodeURIComponent(it.email) +
+         "?subject=" + encodeURIComponent(subject) +
+         "&body="    + encodeURIComponent(body);
+}
+
+function show(el){ el.classList.add("open"); document.body.style.overflow="hidden"; }
+function hide(el){
+  el.classList.remove("open");
+  if(!document.querySelector(".scrim.open")) document.body.style.overflow="";
+  if(lastFocus){ try{ lastFocus.focus(); }catch(e){} lastFocus=null; }
+}
+
+/* ==== shortlist ==== */
+function pickedItems(){
+  return INCENTIVES.filter(it=>picked.has(it.id))
+    .sort((a,b)=>CAT_ORDER.indexOf(a.category)-CAT_ORDER.indexOf(b.category) || a.name.localeCompare(b.name));
+}
+
+function renderList(){
+  const items = pickedItems();
+  $("#pickedList").innerHTML = items.map(it =>
+    '<li class="picked-item">' +
+      '<div class="picked-main">' +
+        '<span class="nm">'+esc(it.name)+'</span>' +
+        '<span class="sub">'+esc(it.body)+' &nbsp;|&nbsp; '+esc(it.type)+'</span>' +
+      '</div>' +
+      '<button class="drop" data-pick="'+it.id+'">Remove</button>' +
+    '</li>').join("");
+
+  $("#listNote").textContent = items.length
+    ? "Download produces a plain-text PDF summary of these " + items.length +
+      " program" + (items.length===1?"":"s") + ", grouped by category and ready to forward."
+    : "Nothing selected yet.";
+
+  $("#listDownload").disabled = !items.length;
+  $("#listClear").disabled = !items.length;
+}
+
+function openList(){
+  lastFocus = document.activeElement;
+  renderList();
+  show($("#listScrim"));
+  $("#listClose").focus();
+}
+
+/* ==== export ==== */
+function exportText(items){
+  const stamp = new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  const lines = [
+    "CALIFORNIA BUSINESS INCENTIVES — SELECTED PROGRAMS",
+    items.length+" program"+(items.length===1?"":"s")+" selected. Prepared "+stamp+".",
+    "Source: California Business Investment Guide (GO-Biz, September 2026).",
+    ""
+  ];
+  let cat = null;
+  items.forEach(it=>{
+    if(it.category!==cat){ lines.push("","== "+it.category+" ==",""); cat = it.category; }
+    lines.push(
+      it.name,
+      "  Agency:           "+it.body,
+      "  Type:             "+it.type,
+      "  Total available:  "+it.total,
+      "  Maximum award:    "+it.max,
+      "  Timing:           "+it.timing,
+      "  Eligibility:      "+it.eligibility,
+      "  Contact:          "+(it.contactUrl || it.email),
+      "",
+      "  "+it.summary,
+      "  "+it.url,
+      ""
+    );
+  });
+  const blob = new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "california-business-incentives.txt";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },400);
+
+  const note = $("#listNote");
+  if(note) note.textContent = "The PDF library did not load, so your list downloaded as a text file instead. Reload the page on a connected network to get the PDF.";
+}
+
+/* ==== PDF export ==== */
+function exportPDF(){
+  const items = pickedItems();
+  if(!items.length) return;
+
+  if(!window.jspdf || !window.jspdf.jsPDF){ exportText(items); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt",format:"letter"});
+
+  const L=62, R=62, TOP=64;
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const CW = W-L-R;
+  let y = TOP;
+
+  const room = need => { if(y+need > H-62){ doc.addPage(); y = TOP; return true; } return false; };
+
+  const write = (text,{size=10,style="normal",color=[26,42,50],lead=14,gap=0,indent=0}={}) => {
+    doc.setFont("helvetica",style); doc.setFontSize(size); doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(String(text), CW-indent);
+    lines.forEach(ln=>{ room(lead); doc.text(ln, L+indent, y); y += lead; });
+    y += gap;
+  };
+
+  const rule = (gapBefore=8,gapAfter=12,shade=205) => {
+    room(gapBefore+2); y += gapBefore;
+    doc.setDrawColor(shade); doc.setLineWidth(.6); doc.line(L,y,W-R,y); y += gapAfter;
+  };
+
+  /* cover */
+  doc.setFont("helvetica","bold"); doc.setFontSize(19); doc.setTextColor(17,37,47);
+  doc.text("California Business Incentives", L, y); y += 24;
+  doc.text("Selected Programs", L, y); y += 20;
+
+  const stamp = new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  write(items.length+" program"+(items.length===1?"":"s")+" selected  ·  Prepared "+stamp,
+        {size:9.5,color:[95,112,120],lead:13,gap:4});
+  write("Source: California Business Investment Guide, Governor's Office of Business and Economic Development, September 2026. Figures and deadlines change; confirm with the administering agency before relying on them.",
+        {size:8.5,color:[122,136,143],lead:11.5,gap:2});
+  rule(10,20,175);
+
+  let lastCat = null;
+  items.forEach((it,idx)=>{
+    room(96);
+
+    if(it.category !== lastCat){
+      if(lastCat!==null) y += 6;
+      room(34);
+      write(it.category, {size:9.5,style:"bold",color:[95,112,120],lead:13,gap:6});
+      lastCat = it.category;
+    }
+
+    write(it.name, {size:12.5,style:"bold",color:[17,37,47],lead:16,gap:5});
+
+    const field = (label,val) => {
+      if(!val) return;
+      doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(95,112,120);
+      const lw = 104;
+      const lines = doc.splitTextToSize(String(val), CW-lw);
+      room(12.5*lines.length);
+      doc.text(label, L, y);
+      doc.setFont("helvetica","normal"); doc.setTextColor(30,48,57);
+      lines.forEach((ln,i)=>{ if(i>0) room(12.5); doc.text(ln, L+lw, y); y += 12.5; });
+    };
+
+    field("Agency", it.body);
+    field("Type", it.type);
+    field("Total available", it.total);
+    field("Maximum award", it.max);
+    field("Timing", it.timing);
+    field("Eligibility", it.eligibility);
+    field("Contact", it.contactUrl || it.email);
+
+    y += 6;
+    write(it.summary, {size:9.5,color:[38,56,64],lead:13.5,gap:4});
+
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(120,86,20);
+    const urlLines = doc.splitTextToSize(it.url, CW);
+    urlLines.forEach(ln=>{ room(11.5); doc.textWithLink(ln, L, y, {url:it.url}); y += 11.5; });
+
+    if(idx < items.length-1) rule(11,14,222);
+  });
+
+  /* page numbers */
+  const pages = doc.internal.getNumberOfPages();
+  for(let p=1;p<=pages;p++){
+    doc.setPage(p);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(140,152,158);
+    doc.text("California Business Incentives — Selected Programs", L, H-36);
+    doc.text(p+" / "+pages, W-R, H-36, {align:"right"});
+  }
+
+  doc.save("california-business-incentives.pdf");
+}
+
+/* ==== events ==== */
+document.addEventListener("click", e => {
+  const pickBtn = e.target.closest("[data-pick]");
+  if(pickBtn){ e.stopPropagation(); togglePick(pickBtn.dataset.pick); return; }
+
+  if(e.target.closest("[data-stop]")){ e.stopPropagation(); return; }
+
+  if(e.target.closest("[data-clear]")){ resetFilters(); return; }
+
+  const card = e.target.closest(".card");
+  if(card){ openDetail(card.dataset.id); return; }
+});
+
+document.addEventListener("keydown", e => {
+  if(e.key==="Escape"){
+    const open = document.querySelector(".scrim.open");
+    if(open) hide(open);
+    return;
+  }
+  if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("card")){
+    e.preventDefault(); openDetail(e.target.dataset.id);
+  }
+});
+
+[$("#fCat"),$("#fBody"),$("#fType")].forEach(s=>s.addEventListener("change",render));
+$("#q").addEventListener("input",render);
+
+function resetFilters(){
+  $("#q").value=""; $("#fCat").value=""; $("#fBody").value=""; $("#fType").value="";
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("#clearBtn").addEventListener("click",resetFilters);
+
+$("#detailClose").addEventListener("click",()=>hide($("#detailScrim")));
+$("#listClose").addEventListener("click",()=>hide($("#listScrim")));
+[$("#detailScrim"),$("#listScrim")].forEach(sc=>{
+  sc.addEventListener("click", e => { if(e.target===sc) hide(sc); });
+});
+
+$("#viewListBtn").addEventListener("click",openList);
+$("#downloadBtn").addEventListener("click",exportPDF);
+$("#listDownload").addEventListener("click",exportPDF);
+$("#listClear").addEventListener("click",()=>{
+  picked.clear(); syncBasket(); render(); renderList();
+});
+
+render();
+syncBasket();
+</script>
+</body>
+</html>
